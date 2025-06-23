@@ -1,4 +1,13 @@
 services:
+  stats-postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+    ports:
+      - "5432:5432"
+
   ewm-service:
     build:
       context: .
