@@ -1,13 +1,14 @@
 services:
+  ewm-service:
+    build:
+      context: .
+      dockerfile: service/Dockerfile
+    ports:
+      - "8080:8080"
+
   stats-server:
     build:
       context: .
       dockerfile: stat/server/Dockerfile
     ports:
       - "9090:9090"
-
-  ewm-service:
-    build:
-      context: ./service
-    ports:
-      - "8080:8080"
