@@ -6,7 +6,7 @@ services:
     ports:
       - "9090:9090"
 
-  service:
+  ewm-service:
     build:
       context: ./service
     ports:
