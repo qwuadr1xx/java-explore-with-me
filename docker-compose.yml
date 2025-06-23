@@ -15,7 +15,7 @@ services:
 
   stats-server:
     build:
-      context: ./stat-server
+      context: ./stat/server
       dockerfile: Dockerfile
     container_name: stats-server
     depends_on:
@@ -46,7 +46,7 @@ services:
 
   ewm-service:
     build:
-      context: ./main-service
+      context: ./service
       dockerfile: Dockerfile
     container_name: ewm-service
     depends_on:
