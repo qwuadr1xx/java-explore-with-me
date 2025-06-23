@@ -1,6 +1,9 @@
+version: '3.8'
+
 services:
   stats-postgres:
-    image: postgres:15
+    image: postgres:16-alpine
+    container_name: stats-postgres
     environment:
       POSTGRES_DB: postgres
       POSTGRES_USER: postgres
@@ -8,16 +11,20 @@ services:
     ports:
       - "5432:5432"
 
-  ewm-service:
-    build:
-      context: .
-      dockerfile: service/Dockerfile
-    ports:
-      - "8080:8080"
-
   stats-server:
     build:
       context: .
       dockerfile: stat/server/Dockerfile
+    container_name: stats-server
     ports:
       - "9090:9090"
+    depends_on:
+      - stats-postgres
+
+  ewm-service:
+    build:
+      context: .
+      dockerfile: service/Dockerfile
+    container_name: ewm-service
+    ports:
+      - "8080:8080"
