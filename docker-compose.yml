@@ -1,6 +1,6 @@
 services:
   stats-server:
-    build: stat/stat-server
+    build: stat/server
     image: stat-server
     container_name: stats-server
     ports:
@@ -28,7 +28,7 @@ services:
       retries: 10
 
   ewm-service:
-    build: main-service
+    build: service
     image: main-service
     container_name: main-service
     ports:
