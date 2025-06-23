@@ -2,6 +2,7 @@ FROM eclipse-temurin:21-jdk-jammy AS builder
 WORKDIR /app
 COPY ../../pom.xml .
 COPY ../../stat ./stat
+COPY ../../service ./service
 
 RUN apt-get update && apt-get install -y maven && \
     mvn clean package -DskipTests
