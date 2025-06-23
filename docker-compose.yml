@@ -2,7 +2,7 @@ services:
   stats-db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: stat
+      POSTGRES_DB: postgres
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 1234
     ports:
@@ -12,12 +12,12 @@ services:
     build:
       context: .
       dockerfile: stat/server/Dockerfile
-    ports:
-      - "9090:9090"
     depends_on:
       - stats-db
+    ports:
+      - "9090:9090"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://stats-db:5432/stat
+      SPRING_DATASOURCE_URL: jdbc:postgresql://stats-db:5432/postgres
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: 1234
 
