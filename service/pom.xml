@@ -13,6 +13,6 @@
 
     <artifactId>explore-with-me-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <packaging>pom</packaging>
+    <packaging>jar</packaging>
 
 </project>
