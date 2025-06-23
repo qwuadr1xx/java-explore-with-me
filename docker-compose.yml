@@ -1,71 +1,35 @@
 services:
-  stats-db:
-    image: postgres:latest
-    container_name: stats-db
-    environment:
-      POSTGRES_DB: postgres
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: "1234"
-    ports:
-      - "6541:5432"
-    volumes:
-      - stats_pgdata:/var/lib/postgresql/data
-    networks:
-      - ewm-net
-
   stats-server:
     build:
-      context: ./stat/server
-      dockerfile: Dockerfile
-    container_name: stats-server
-    depends_on:
-      - stats-db
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://stats-db:5432/postgres
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: "1234"
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      context: ./stat-server
     ports:
       - "9090:9090"
-    networks:
-      - ewm-net
+    depends_on:
+      - stats-db
 
-  ewm-db:
-    image: postgres:latest
-    container_name: ewm-db
+  stats-db:
+    image: postgres:16.3
     environment:
       POSTGRES_DB: postgres
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: "1234"
+      POSTGRES_PASSWORD: 1234
     ports:
-      - "6542:5432"
-    volumes:
-      - ewm_pgdata:/var/lib/postgresql/data
-    networks:
-      - ewm-net
+      - "6541:5432"
 
   ewm-service:
     build:
       context: ./service
-      dockerfile: Dockerfile
-    container_name: ewm-service
+    ports:
+      - "8080:8080"
     depends_on:
       - ewm-db
       - stats-server
+
+  ewm-db:
+    image: postgres:16.3
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://ewm-db:5432/postgres
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: "1234"
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      STATS_SERVER_URL: http://stats-server:9090
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
     ports:
-      - "8080:8080"
-    networks:
-      - ewm-net
-
-volumes:
-  stats_pgdata:
-  ewm_pgdata:
-
-networks:
-  ewm-net:
+      - "6542:5432"
