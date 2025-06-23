@@ -1,7 +1,7 @@
 services:
   stats-server:
     build:
-      context: ./stat/server
+      context: .
     ports:
       - "9090:9090"
 
