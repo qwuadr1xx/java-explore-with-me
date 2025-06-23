@@ -1,10 +1,12 @@
 services:
-  ewm-service:
-    build:
-      context: .
-      dockerfile: service/Dockerfile
+  stats-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: stat
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
     ports:
-      - "8080:8080"
+      - "6540:5432"
 
   stats-server:
     build:
@@ -12,3 +14,33 @@ services:
       dockerfile: stat/server/Dockerfile
     ports:
       - "9090:9090"
+    depends_on:
+      - stats-db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://stats-db:5432/stat
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 1234
+
+  ewm-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ewm
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+    ports:
+      - "6541:5432"
+
+  ewm-service:
+    build:
+      context: .
+      dockerfile: service/Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - ewm-db
+      - stats-server
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://ewm-db:5432/ewm
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 1234
+      STATS_SERVER_URL: http://stats-server:9090
