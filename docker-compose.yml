@@ -1,33 +1,12 @@
-version: '3.8'
-
 services:
   stats-server:
     build:
       context: ./stat/server
-      dockerfile: Dockerfile
-    image: stats-server
-    container_name: stats-server
     ports:
       - "9090:9090"
 
-  ewm-service:
+  service:
     build:
       context: ./service
-      dockerfile: Dockerfile
-    image: ewm-service
-    container_name: ewm-service
     ports:
       - "8080:8080"
-    depends_on:
-      - stats-server
-      - ewm-db
-
-  ewm-db:
-    image: postgres:15-alpine
-    container_name: ewm-db
-    environment:
-      POSTGRES_DB: ewm
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "6541:5432"
