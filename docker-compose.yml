@@ -2,10 +2,11 @@ services:
   stats-server:
     build:
       context: .
+      dockerfile: stat/server/Dockerfile
     ports:
       - "9090:9090"
 
-  ewm-service:
+  service:
     build:
       context: ./service
     ports:
