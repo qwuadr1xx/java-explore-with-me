@@ -16,6 +16,8 @@ services:
     container_name: stats-server
     depends_on:
       - stats-db
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
     ports:
       - "9090:9090"
 
