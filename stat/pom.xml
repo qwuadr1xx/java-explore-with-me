@@ -10,15 +10,9 @@
     </parent>
 
     <modules>
-        <module>
-            dto
-        </module>
-        <module>
-            client
-        </module>
-        <module>
-            server
-        </module>
+        <module>dto</module>
+        <module>client</module>
+        <module>server</module>
     </modules>
     <build>
         <plugins>

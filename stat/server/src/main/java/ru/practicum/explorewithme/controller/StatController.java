@@ -21,8 +21,8 @@ public class StatController {
     private static final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
     @GetMapping("/stats")
-    public ResponseEntity<List<ViewStats>> getViewStats(@RequestParam(name = "start") @DateTimeFormat(pattern = DATE_TIME_PATTERN) LocalDateTime start,
-                                                        @RequestParam(name = "end") @DateTimeFormat(pattern = DATE_TIME_PATTERN) LocalDateTime end,
+    public ResponseEntity<List<ViewStats>> getViewStats(@RequestParam @DateTimeFormat(pattern = DATE_TIME_PATTERN) LocalDateTime start,
+                                                        @RequestParam @DateTimeFormat(pattern = DATE_TIME_PATTERN) LocalDateTime end,
                                                         @RequestParam(required = false) List<String> uris,
                                                         @RequestParam(required = false, defaultValue = "false") Boolean unique) {
         log.info("GET /stats - получение статистики в период с {} по {}", start, end);

@@ -24,12 +24,8 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>
-            stat
-        </module>
-        <module>
-            service
-        </module>
+        <module>stat</module>
+        <module>service</module>
     </modules>
 
     <properties>

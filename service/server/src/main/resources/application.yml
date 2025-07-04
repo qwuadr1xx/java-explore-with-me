@@ -1,5 +1,5 @@
 server:
-  port: 9090
+  port: 8080
 
 spring:
   datasource:
@@ -12,7 +12,7 @@ spring:
     activate:
       on-profile: default
   datasource:
-    url: jdbc:postgresql://localhost:5432/stat
+    url: jdbc:postgresql://localhost:5432/service
     username: postgres
     password: 1234
   jpa:
@@ -24,18 +24,3 @@ spring:
   sql:
     init:
       mode: always
-
----
-
-spring:
-  config:
-    activate:
-      on-profile: docker
-  datasource:
-    url: jdbc:postgresql://stats-db:5432/stat
-    username: postgres
-    password: 1234
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true

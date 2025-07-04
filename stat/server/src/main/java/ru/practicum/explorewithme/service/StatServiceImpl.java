@@ -2,6 +2,7 @@ package ru.practicum.explorewithme.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.explorewithme.HitDtoIn;
 import ru.practicum.explorewithme.ViewStats;
 import ru.practicum.explorewithme.exception.InvalidDateException;
@@ -18,12 +19,14 @@ public class StatServiceImpl implements StatService {
     private final StatRepository statRepository;
 
     @Override
+    @Transactional
     public void addHit(HitDtoIn hitDtoIn) {
         EndpointHit hit = StatMapper.toEndpointHit(hitDtoIn);
         statRepository.save(hit);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ViewStats> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
         if (start.isAfter(end)) {
             throw new InvalidDateException(start, end);
