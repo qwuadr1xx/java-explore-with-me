@@ -19,7 +19,7 @@ import java.util.List;
 @RestController("adminEventsController")
 @RequestMapping("/admin/events")
 public class EventsController {
-    EventsService eventsService;
+    private final EventsService eventsService;
     private static final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
     @GetMapping

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.explorewithme.events.EventFullDto;
 import ru.practicum.explorewithme.events.NewEventDto;
 import ru.practicum.explorewithme.events.UpdateEventUserRequest;
+import ru.practicum.explorewithme.internal.events.service.EventsService;
 import ru.practicum.explorewithme.requests.EventRequestStatusUpdateRequest;
 import ru.practicum.explorewithme.requests.EventRequestStatusUpdateResult;
 import ru.practicum.explorewithme.requests.ParticipationRequestDto;
@@ -19,26 +20,31 @@ import java.util.List;
 @RestController("privateEventsController")
 @RequestMapping("/users/{userId}/events")
 public class EventsController {
+    private final EventsService eventsService;
+
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<EventFullDto> getEvents(@PathVariable Long userId,
                                         @RequestParam(required = false) Integer from,
                                         @RequestParam(required = false) Integer size) {
-        return null;
+        log.info("GET /users/{}/events - Получение событий для userId: {}, from: {}, size: {}", userId, userId, from, size);
+        return eventsService.getEvents(userId, from, size);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public EventFullDto addEvent(@Valid @RequestBody NewEventDto newEventDto,
                                  @PathVariable Long userId) {
-        return null;
+        log.info("POST /users/{}/events - Добавление нового события", userId);
+        return eventsService.addEvent(newEventDto, userId);
     }
 
     @GetMapping("/{eventId}")
     @ResponseStatus(HttpStatus.OK)
     public EventFullDto getEventById(@PathVariable Long userId,
                                      @PathVariable Long eventId) {
-        return null;
+        log.info("GET /users/{}/events/{} - Получение события с id: {} для userId: {}", userId, eventId, eventId, userId);
+        return eventsService.getEventById(userId, eventId);
     }
 
     @PatchMapping("/{eventId}")
@@ -46,22 +52,25 @@ public class EventsController {
     public EventFullDto updateEventById(@Valid @RequestBody UpdateEventUserRequest request,
                                         @PathVariable Long userId,
                                         @PathVariable Long eventId) {
-        return null;
+        log.info("PATCH /users/{}/events/{} - Обновление события с id: {} для userId: {}", userId, eventId, eventId, userId);
+        return eventsService.updateEventById(request, userId, eventId);
     }
 
     @GetMapping("/{eventId}/requests")
     @ResponseStatus(HttpStatus.OK)
     public List<ParticipationRequestDto> getEventsRequests(@PathVariable Long userId,
                                                            @PathVariable Long eventId) {
-        return null;
+        log.info("GET /users/{}/events/{}/requests - Получение запросов на участие в событии с id: {} для userId: {}", userId, eventId, eventId, userId);
+        return eventsService.getEventsRequests(userId, eventId);
     }
 
     @PatchMapping("/{eventId}/requests")
     @ResponseStatus(HttpStatus.OK)
     public EventRequestStatusUpdateResult updateRequestStatus(@Valid @RequestBody
-                                                                  EventRequestStatusUpdateRequest request,
+                                                              EventRequestStatusUpdateRequest request,
                                                               @PathVariable Long userId,
                                                               @PathVariable Long eventId) {
-        return null;
+        log.info("PATCH /users/{}/events/{}/requests - Обновление статуса запросов для события с id: {} для userId: {}", userId, eventId, eventId, userId);
+        return eventsService.updateRequestStatus(request, userId, eventId);
     }
 }

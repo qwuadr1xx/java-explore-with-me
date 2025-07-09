@@ -1,5 +1,6 @@
 package ru.practicum.explorewithme.categories;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -13,6 +14,7 @@ import lombok.NoArgsConstructor;
 @Builder(toBuilder = true)
 public class NewCategoryDto {
     @NotNull(message = "Field: name. Error: must not be blank. Value: null")
+    @NotBlank(message = "Field: name. Error: must not be blank. Value: ''")
     @Size(min = 1, max = 50)
     private String name;
 }

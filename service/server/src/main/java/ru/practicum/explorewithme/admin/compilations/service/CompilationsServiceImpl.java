@@ -5,11 +5,12 @@ import org.springframework.stereotype.Service;
 import ru.practicum.explorewithme.admin.compilations.repository.CompilationsRepository;
 import ru.practicum.explorewithme.complitations.CompilationDto;
 import ru.practicum.explorewithme.complitations.NewCompilationDto;
+import ru.practicum.explorewithme.complitations.UpdateCompilationRequest;
 
 @Service
 @RequiredArgsConstructor
 public class CompilationsServiceImpl implements CompilationsService {
-    CompilationsRepository compilationsRepository;
+    private final CompilationsRepository compilationsRepository;
 
     @Override
     public CompilationDto addCompilation(NewCompilationDto newCompilationDto) {
@@ -22,7 +23,7 @@ public class CompilationsServiceImpl implements CompilationsService {
     }
 
     @Override
-    public CompilationDto updateCompilation(NewCompilationDto newCompilationDto, Long compId) {
-        return compilationsRepository.updateCompilation(newCompilationDto, compId);
+    public CompilationDto updateCompilation(UpdateCompilationRequest updateCompilationRequest, Long compId) {
+        return compilationsRepository.updateCompilation(updateCompilationRequest, compId);
     }
 }

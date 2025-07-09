@@ -8,6 +8,7 @@ import ru.explorewithme.jooq.tables.Compilations;
 import ru.explorewithme.jooq.tables.Events;
 import ru.practicum.explorewithme.complitations.CompilationDto;
 import ru.practicum.explorewithme.complitations.NewCompilationDto;
+import ru.practicum.explorewithme.complitations.UpdateCompilationRequest;
 import ru.practicum.explorewithme.events.EventShortDto;
 import ru.practicum.explorewithme.exception.NotFoundException;
 
@@ -58,10 +59,10 @@ public class CompilationsRepositoryImpl implements CompilationsRepository {
     }
 
     @Override
-    public CompilationDto updateCompilation(NewCompilationDto newCompilationDto, Long compId) {
+    public CompilationDto updateCompilation(UpdateCompilationRequest updateCompilationRequest, Long compId) {
         CompilationDto compilation = dsl.update(Compilations.COMPILATIONS)
-                .set(Compilations.COMPILATIONS.TITLE, newCompilationDto.getTitle())
-                .set(Compilations.COMPILATIONS.PINNED, newCompilationDto.getPinned())
+                .set(Compilations.COMPILATIONS.TITLE, updateCompilationRequest.getTitle())
+                .set(Compilations.COMPILATIONS.PINNED, updateCompilationRequest.getPinned())
                 .where(Compilations.COMPILATIONS.ID.eq(compId))
                 .returning()
                 .fetchOptional()
@@ -73,9 +74,9 @@ public class CompilationsRepositoryImpl implements CompilationsRepository {
                 .where(CompilationEvents.COMPILATION_EVENTS.COMPILATION_ID.eq(compId))
                 .execute();
 
-        if (newCompilationDto.getEvents() != null && !newCompilationDto.getEvents().isEmpty()) {
+        if (updateCompilationRequest.getEvents() != null && !updateCompilationRequest.getEvents().isEmpty()) {
             dsl.batch(
-                    newCompilationDto.getEvents().stream()
+                    updateCompilationRequest.getEvents().stream()
                             .map(eventId -> dsl.insertInto(CompilationEvents.COMPILATION_EVENTS)
                                     .set(CompilationEvents.COMPILATION_EVENTS.COMPILATION_ID, compId)
                                     .set(CompilationEvents.COMPILATION_EVENTS.EVENT_ID, eventId))
@@ -83,7 +84,7 @@ public class CompilationsRepositoryImpl implements CompilationsRepository {
             ).execute();
 
             List<EventShortDto> eventShortDtoList = dsl.selectFrom(Events.EVENTS)
-                    .where(Events.EVENTS.ID.in(newCompilationDto.getEvents()))
+                    .where(Events.EVENTS.ID.in(updateCompilationRequest.getEvents()))
                     .fetchInto(EventShortDto.class);
 
             compilation.setEvents(eventShortDtoList);

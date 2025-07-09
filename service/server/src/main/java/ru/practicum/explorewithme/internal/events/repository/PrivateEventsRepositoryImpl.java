@@ -1,23 +1,26 @@
 package ru.practicum.explorewithme.internal.events.repository;
 
 import lombok.RequiredArgsConstructor;
-import org.jooq.DSLContext;
-import org.jooq.Field;
+import org.jooq.*;
 import org.springframework.stereotype.Repository;
 import ru.explorewithme.jooq.tables.Events;
 import ru.explorewithme.jooq.tables.Locations;
+import ru.explorewithme.jooq.tables.Requests;
 import ru.explorewithme.jooq.tables.Users;
+import ru.explorewithme.jooq.tables.records.RequestsRecord;
 import ru.practicum.explorewithme.events.EventFullDto;
 import ru.practicum.explorewithme.events.NewEventDto;
 import ru.practicum.explorewithme.events.UpdateEventUserRequest;
 import ru.practicum.explorewithme.events.utils.EventState;
 import ru.practicum.explorewithme.events.utils.EventStatus;
 import ru.practicum.explorewithme.events.utils.StateAction;
+import ru.practicum.explorewithme.exception.IllegalRequestStatusException;
 import ru.practicum.explorewithme.exception.NotFoundException;
 import ru.practicum.explorewithme.requests.EventRequestStatusUpdateRequest;
 import ru.practicum.explorewithme.requests.EventRequestStatusUpdateResult;
 import ru.practicum.explorewithme.requests.ParticipationRequestDto;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,7 +51,8 @@ public class PrivateEventsRepositoryImpl implements EventsRepository {
                 .set(Events.EVENTS.CATEGORY_ID, newEventDto.getCategory())
                 .set(Events.EVENTS.DESCRIPTION, newEventDto.getDescription())
                 .set(Events.EVENTS.EVENT_DATE, newEventDto.getEventDate())
-                .set(Events.EVENTS.TITLE, newEventDto.getTitle());
+                .set(Events.EVENTS.TITLE, newEventDto.getTitle())
+                .set(Events.EVENTS.CREATED_ON, LocalDateTime.now());
 
         if (newEventDto.getPaid() != null) {
             query = query.set(Events.EVENTS.PAID, newEventDto.getPaid());
@@ -95,13 +99,15 @@ public class PrivateEventsRepositoryImpl implements EventsRepository {
 
         Optional.ofNullable(request.getLocation()).ifPresent(v -> {
             Long locId = dsl.select(Events.EVENTS.LOCATION_ID)
-                .from(Events.EVENTS)
-                .where(Events.EVENTS.ID.eq(eventId))
-                .fetchOne()
-                .into(Long.class);
+                    .from(Events.EVENTS)
+                    .where(Events.EVENTS.ID.eq(eventId))
+                    .fetchOptional()
+                    .orElseThrow(() -> new NotFoundException(String.format("Event with id %d not found", eventId)))
+                    .into(Long.class);
 
             dsl.deleteFrom(Locations.LOCATIONS).where(Locations.LOCATIONS.ID.eq(locId)).execute();
 
+            
             Long newLocId = dsl.insertInto(Locations.LOCATIONS)
                     .set(Locations.LOCATIONS.LAT, v.getLat())
                     .set(Locations.LOCATIONS.LON, v.getLon())
@@ -118,7 +124,7 @@ public class PrivateEventsRepositoryImpl implements EventsRepository {
         if (updates.isEmpty()) {
             throw new IllegalArgumentException("No fields to update");
         }
-        
+
         return dsl.update(Events.EVENTS)
                 .set(updates)
                 .where(Events.EVENTS.ID.eq(eventId))
@@ -130,42 +136,188 @@ public class PrivateEventsRepositoryImpl implements EventsRepository {
 
     @Override
     public List<ParticipationRequestDto> getEventsRequests(Long userId, Long eventId) {
-        return List.of();
+        return dsl.selectFrom(Requests.REQUESTS)
+                .where(Requests.REQUESTS.EVENT_ID.eq(eventId))
+                .and(Requests.REQUESTS.REQUESTER.eq(userId))
+                .fetchInto(ParticipationRequestDto.class);
     }
 
     @Override
-    public EventRequestStatusUpdateResult updateRequestStatus(EventRequestStatusUpdateRequest request, Long userId, Long eventId) {
+    public EventRequestStatusUpdateResult updateRequestStatus(EventRequestStatusUpdateRequest request,
+                                                              Long userId, Long eventId) {
         findUserEvent(userId, eventId);
 
         List<Long> requestIds = request.getRequestIds();
-        EventStatus status = request.getStatus();
+        EventStatus newStatus = request.getStatus();
 
-        if (status == EventStatus.CONFIRMED) {
-            dsl.update(ParticipationRequests.PARTICIPATION_REQUESTS)
-                    .set(ParticipationRequests.PARTICIPATION_REQUESTS.STATUS, EventStatus.CONFIRMED)
-                    .where(ParticipationRequests.PARTICIPATION_REQUESTS.ID.in(requestIds))
-                    .execute();
-        } else if (status == EventStatus.REJECTED) {
-            dsl.update(ParticipationRequests.PARTICIPATION_REQUESTS)
-                    .set(ParticipationRequests.PARTICIPATION_REQUESTS.STATUS, EventStatus.REJECTED)
-                    .where(ParticipationRequests.PARTICIPATION_REQUESTS.ID.in(requestIds))
-                    .execute();
+        Record3<Integer, Integer, Boolean> recordMap = dsl.select(
+                        Events.EVENTS.CONFIRMED_REQUESTS,
+                        Events.EVENTS.PARTICIPANT_LIMIT,
+                        Events.EVENTS.REQUEST_MODERATION)
+                .from(Events.EVENTS)
+                .where(Events.EVENTS.ID.eq(eventId))
+                .fetchOne();
+
+        Integer confirmedRequestsInEvent = recordMap.get(Events.EVENTS.CONFIRMED_REQUESTS);
+        Integer participantLimit = recordMap.get(Events.EVENTS.PARTICIPANT_LIMIT);
+        Boolean requestModeration = recordMap.get(Events.EVENTS.REQUEST_MODERATION);
+
+        if (participantLimit != 0) {
+            List<Long> firstIds = requestIds.subList(0, Math.min(requestIds.size(),
+                    participantLimit - confirmedRequestsInEvent));
+
+            List<Long> lastIds = requestIds.subList(firstIds.size(), requestIds.size());
+
+            Result<RequestsRecord> firstRequestRecords = dsl.selectFrom(Requests.REQUESTS)
+                    .where(Requests.REQUESTS.ID.in(firstIds))
+                    .fetch();
+
+            Result<RequestsRecord> lastRequestRecords = dsl.selectFrom(Requests.REQUESTS)
+                    .where(Requests.REQUESTS.ID.in(lastIds))
+                    .fetch();
+
+            if (firstRequestRecords.size() != firstIds.size() || lastRequestRecords.size() != lastIds.size()) {
+                throw new NotFoundException("Some requests were not found in the database");
+            }
+
+            List<Long> invalidFirstStatusIds = firstRequestRecords.stream()
+                    .filter(r -> !"PENDING".equals(r.get(Requests.REQUESTS.STATUS)))
+                    .map(r -> r.get(Requests.REQUESTS.ID))
+                    .toList();
+
+            List<Long> invalidLastStatusIds = lastRequestRecords.stream()
+                    .filter(r -> !"PENDING".equals(r.get(Requests.REQUESTS.STATUS)))
+                    .map(r -> r.get(Requests.REQUESTS.ID))
+                    .toList();
+
+            if (!invalidFirstStatusIds.isEmpty()) {
+                throw new IllegalRequestStatusException("Some requests are not in PENDING status. IDs: " +
+                        invalidFirstStatusIds);
+            } else if (!invalidLastStatusIds.isEmpty()) {
+                throw new IllegalRequestStatusException("Some requests are not in PENDING status. IDs: " +
+                        invalidLastStatusIds);
+            }
+
+            if (requestModeration) {
+                if (newStatus == EventStatus.CONFIRMED) {
+                    List<ParticipationRequestDto> confirmedStatusList = dsl.update(Requests.REQUESTS)
+                            .set(Requests.REQUESTS.STATUS, "CONFIRMED")
+                            .where(Requests.REQUESTS.ID.in(firstIds))
+                            .returning()
+                            .fetchInto(ParticipationRequestDto.class);
+
+                    List<ParticipationRequestDto> rejectedStatusList = dsl.update(Requests.REQUESTS)
+                            .set(Requests.REQUESTS.STATUS, "REJECTED")
+                            .where(Requests.REQUESTS.ID.in(lastIds))
+                            .returning()
+                            .fetchInto(ParticipationRequestDto.class);
+
+                    dsl.update(Events.EVENTS)
+                            .set(Events.EVENTS.CONFIRMED_REQUESTS, confirmedRequestsInEvent + firstIds.size())
+                            .where(Events.EVENTS.ID.eq(eventId))
+                            .execute();
+
+                    return EventRequestStatusUpdateResult.builder()
+                            .confirmedRequests(confirmedStatusList)
+                            .rejectedRequests(rejectedStatusList)
+                            .build();
+                } else {
+                    List<ParticipationRequestDto> rejectedStatusList = dsl.update(Requests.REQUESTS)
+                            .set(Requests.REQUESTS.STATUS, newStatus.toString())
+                            .where(Requests.REQUESTS.ID.in(requestIds))
+                            .returning()
+                            .fetchInto(ParticipationRequestDto.class);
+
+                    return EventRequestStatusUpdateResult.builder()
+                            .rejectedRequests(rejectedStatusList)
+                            .build();
+                }
+            } else {
+                List<ParticipationRequestDto> confirmedStatusList = dsl.update(Requests.REQUESTS)
+                        .set(Requests.REQUESTS.STATUS, "CONFIRMED")
+                        .where(Requests.REQUESTS.ID.in(firstIds))
+                        .returning()
+                        .fetchInto(ParticipationRequestDto.class);
+
+                List<ParticipationRequestDto> rejectedStatusList = dsl.update(Requests.REQUESTS)
+                        .set(Requests.REQUESTS.STATUS, "REJECTED")
+                        .where(Requests.REQUESTS.ID.in(lastIds))
+                        .returning()
+                        .fetchInto(ParticipationRequestDto.class);
+
+                dsl.update(Events.EVENTS)
+                        .set(Events.EVENTS.CONFIRMED_REQUESTS, confirmedRequestsInEvent + firstIds.size())
+                        .where(Events.EVENTS.ID.eq(eventId))
+                        .execute();
+
+                return EventRequestStatusUpdateResult.builder()
+                        .confirmedRequests(confirmedStatusList)
+                        .rejectedRequests(rejectedStatusList)
+                        .build();
+            }
+        } else {
+            Result<RequestsRecord> requestRecords = dsl.selectFrom(Requests.REQUESTS)
+                    .where(Requests.REQUESTS.ID.in(requestIds))
+                    .fetch();
+
+            if (requestRecords.size() != requestIds.size()) {
+                throw new NotFoundException("Some requests were not found in the database");
+            }
+
+            List<Long> invalidRequestStatusIds = requestRecords.stream()
+                    .filter(r -> !"PENDING".equals(r.get(Requests.REQUESTS.STATUS)))
+                    .map(r -> r.get(Requests.REQUESTS.ID))
+                    .toList();
+
+            if (!invalidRequestStatusIds.isEmpty()) {
+                throw new IllegalRequestStatusException("Some requests are not in PENDING status. IDs: " +
+                        invalidRequestStatusIds);
+            }
+
+            if (requestModeration) {
+                if (newStatus == EventStatus.CONFIRMED) {
+                    List<ParticipationRequestDto> confirmedStatusList = dsl.update(Requests.REQUESTS)
+                            .set(Requests.REQUESTS.STATUS, "CONFIRMED")
+                            .where(Requests.REQUESTS.ID.in(requestIds))
+                            .returning()
+                            .fetchInto(ParticipationRequestDto.class);
+
+                    dsl.update(Events.EVENTS)
+                            .set(Events.EVENTS.CONFIRMED_REQUESTS, confirmedRequestsInEvent + requestIds.size())
+                            .where(Events.EVENTS.ID.eq(eventId))
+                            .execute();
+
+                    return EventRequestStatusUpdateResult.builder()
+                            .confirmedRequests(confirmedStatusList)
+                            .build();
+                } else {
+                    List<ParticipationRequestDto> rejectedStatusList = dsl.update(Requests.REQUESTS)
+                            .set(Requests.REQUESTS.STATUS, newStatus.toString())
+                            .where(Requests.REQUESTS.ID.in(requestIds))
+                            .returning()
+                            .fetchInto(ParticipationRequestDto.class);
+
+                    return EventRequestStatusUpdateResult.builder()
+                            .rejectedRequests(rejectedStatusList)
+                            .build();
+                }
+            } else {
+                List<ParticipationRequestDto> confirmedStatusList = dsl.update(Requests.REQUESTS)
+                        .set(Requests.REQUESTS.STATUS, "CONFIRMED")
+                        .where(Requests.REQUESTS.ID.in(requestIds))
+                        .returning()
+                        .fetchInto(ParticipationRequestDto.class);
+
+                dsl.update(Events.EVENTS)
+                        .set(Events.EVENTS.CONFIRMED_REQUESTS, confirmedRequestsInEvent + requestIds.size())
+                        .where(Events.EVENTS.ID.eq(eventId))
+                        .execute();
+
+                return EventRequestStatusUpdateResult.builder()
+                        .confirmedRequests(confirmedStatusList)
+                        .build();
+            }
         }
-
-        List<ParticipationRequestDto> confirmedRequests = dsl.selectFrom(ParticipationRequests.PARTICIPATION_REQUESTS)
-                .where(ParticipationRequests.PARTICIPATION_REQUESTS.ID.in(requestIds))
-                .and(ParticipationRequests.PARTICIPATION_REQUESTS.STATUS.eq(EventStatus.CONFIRMED))
-                .fetchInto(ParticipationRequestDto.class);
-
-        List<ParticipationRequestDto> rejectedRequests = dsl.selectFrom(ParticipationRequests.PARTICIPATION_REQUESTS)
-                .where(ParticipationRequests.PARTICIPATION_REQUESTS.ID.in(requestIds))
-                .and(ParticipationRequests.PARTICIPATION_REQUESTS.STATUS.eq(EventStatus.REJECTED))
-                .fetchInto(ParticipationRequestDto.class);
-
-        return EventRequestStatusUpdateResult.builder()
-                .confirmedRequests(confirmedRequests)
-                .rejectedRequests(rejectedRequests)
-                .build();
     }
 
     private void findUserById(Long userId) {

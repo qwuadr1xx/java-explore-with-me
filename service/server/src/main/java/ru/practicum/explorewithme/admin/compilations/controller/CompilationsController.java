@@ -8,13 +8,14 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.explorewithme.admin.compilations.service.CompilationsService;
 import ru.practicum.explorewithme.complitations.CompilationDto;
 import ru.practicum.explorewithme.complitations.NewCompilationDto;
+import ru.practicum.explorewithme.complitations.UpdateCompilationRequest;
 
 @Slf4j
 @RequiredArgsConstructor
 @RestController("adminCompilationsController")
 @RequestMapping("/admin/compilations")
 public class CompilationsController {
-    CompilationsService compilationsService;
+    private final CompilationsService compilationsService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -32,9 +33,9 @@ public class CompilationsController {
 
     @PatchMapping("/{compId}")
     @ResponseStatus(HttpStatus.OK)
-    public CompilationDto updateCompilation(@Valid @RequestBody NewCompilationDto newCompilationDto,
+    public CompilationDto updateCompilation(@Valid @RequestBody UpdateCompilationRequest updateCompilationRequest,
                                          @PathVariable Long compId) {
-        log.info("PATCH /admin/compilations/{} - обновление подборки {}", compId, newCompilationDto);
-        return compilationsService.updateCompilation(newCompilationDto, compId);
+        log.info("PATCH /admin/compilations/{} - обновление подборки {}", compId, updateCompilationRequest);
+        return compilationsService.updateCompilation(updateCompilationRequest, compId);
     }
 }

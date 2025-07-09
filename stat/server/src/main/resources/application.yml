@@ -5,6 +5,9 @@ spring:
   datasource:
     driver-class-name: org.postgresql.Driver
 
+shareit-server:
+  url: "http://localhost:8080"
+
 ---
 
 spring:

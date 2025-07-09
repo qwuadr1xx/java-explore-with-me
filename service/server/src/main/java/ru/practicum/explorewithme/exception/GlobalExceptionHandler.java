@@ -39,6 +39,26 @@ public class GlobalExceptionHandler {
                 .build();
     }
 
+    @ExceptionHandler(IllegalRequestStatusException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiError handleIllegalRequestStatusException(IllegalRequestStatusException e) {
+        return ApiError.builder()
+                .message(e.getMessage())
+                .reason("Illegal request status.")
+                .status("CONFLICT")
+                .build();
+    }
+
+    @ExceptionHandler(IllegalEventStatusException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiError handleIllegalEventStatusException(IllegalEventStatusException e) {
+        return ApiError.builder()
+                .message(e.getMessage())
+                .reason("Illegal event status.")
+                .status("CONFLICT")
+                .build();
+    }
+
     @ExceptionHandler(DataAccessException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ApiError handlerDataAccessException(DataAccessException e) {

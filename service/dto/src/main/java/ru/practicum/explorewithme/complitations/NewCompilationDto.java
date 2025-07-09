@@ -1,5 +1,6 @@
 package ru.practicum.explorewithme.complitations;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -19,6 +20,7 @@ public class NewCompilationDto {
     private Boolean pinned;
 
     @NotNull(message = "Field: title. Error: must not be blank. Value: null")
+    @NotBlank(message = "Field: title. Error: must not be blank. Value: ''")
     @Size(min = 1, max = 50)
     private String title;
 }

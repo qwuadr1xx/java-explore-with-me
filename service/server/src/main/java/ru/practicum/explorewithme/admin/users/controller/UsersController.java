@@ -17,7 +17,7 @@ import java.util.List;
 @RestController("adminUsersController")
 @RequestMapping("/admin/users")
 public class UsersController {
-    UsersService usersService;
+    private final UsersService usersService;
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)

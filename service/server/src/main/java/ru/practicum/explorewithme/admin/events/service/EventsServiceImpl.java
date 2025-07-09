@@ -16,7 +16,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class EventsServiceImpl implements EventsService {
-    EventsRepository eventsRepository;
+    private final EventsRepository eventsRepository;
 
     @Override
     public List<EventFullDto> getEvents(List<Long> users, List<EventState> states, List<Long> categories, LocalDateTime rangeStart, LocalDateTime rangeEnd, Integer from, Integer size) {

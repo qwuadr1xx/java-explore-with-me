@@ -11,7 +11,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class UsersServiceImpl implements UsersService {
-    UsersRepository usersRepository;
+    private final UsersRepository usersRepository;
 
     @Override
     public List<UserDto> getUsers(List<Long> ids, Integer from, Integer size) {

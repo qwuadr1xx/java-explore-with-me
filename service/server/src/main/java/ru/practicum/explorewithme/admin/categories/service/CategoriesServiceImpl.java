@@ -9,7 +9,7 @@ import ru.practicum.explorewithme.categories.NewCategoryDto;
 @Service
 @RequiredArgsConstructor
 public class CategoriesServiceImpl implements CategoriesService {
-    CategoriesRepository categoriesRepository;
+    private final CategoriesRepository categoriesRepository;
 
     @Override
     public CategoryDto addCategory(NewCategoryDto newCategoryDto) {

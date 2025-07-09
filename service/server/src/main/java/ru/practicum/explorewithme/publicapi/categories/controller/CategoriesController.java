@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.explorewithme.categories.CategoryDto;
+import ru.practicum.explorewithme.publicapi.categories.service.CategoriesService;
 
 import java.util.List;
 
@@ -13,16 +14,20 @@ import java.util.List;
 @RestController("publicCategoriesController")
 @RequestMapping("/categories")
 public class CategoriesController {
+    private final CategoriesService categoriesService;
+
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<CategoryDto> getCategories(@RequestParam(required = false) Integer from,
-                                           @RequestParam(required = false) Integer size) {
-        return null;
+    public List<CategoryDto> getCategories(@RequestParam(required = false, defaultValue = "0") Integer from,
+                                           @RequestParam(required = false, defaultValue = "10") Integer size) {
+        log.info("GET /categories - Получение категорий: from={}, size={}", from, size);
+        return categoriesService.getCategories(from, size);
     }
 
     @GetMapping("/{catId}")
     @ResponseStatus(HttpStatus.OK)
     public CategoryDto getCategoryById(@PathVariable Long catId) {
-        return null;
+        log.info("GET /categories/{} - Получение категории по ID", catId);
+        return categoriesService.getCategory(catId);
     }
 }
