@@ -36,7 +36,7 @@ jobs:
 
       - name: Apply schema.sql
         run: |
-          psql -h localhost -U postgres -d service -f service-server/src/main/resources/schema.sql
+          psql -h service-db -U postgres -d service -f service-server/src/main/resources/schema.sql
         env:
           PGPASSWORD: 1234
 
