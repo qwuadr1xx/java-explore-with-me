@@ -9,6 +9,16 @@ services:
     ports:
       - "5432:5432"
 
+  service-db:
+    image: postgres:16-alpine
+    container_name: service-db
+    environment:
+      POSTGRES_DB: service
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+    ports:
+      - "5432:5432"
+
   stats-server:
     build:
       context: .
@@ -25,5 +35,9 @@ services:
     build:
       context: .
       dockerfile: service/Dockerfile
+    depends_on:
+      - service-db
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
     ports:
       - "8080:8080"

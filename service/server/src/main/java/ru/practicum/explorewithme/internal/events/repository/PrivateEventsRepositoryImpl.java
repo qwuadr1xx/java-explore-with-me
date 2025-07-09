@@ -128,7 +128,6 @@ public class PrivateEventsRepositoryImpl implements EventsRepository {
         return dsl.update(Events.EVENTS)
                 .set(updates)
                 .where(Events.EVENTS.ID.eq(eventId))
-                .and(Events.EVENTS.INITIATOR_ID.eq(userId))
                 .returning()
                 .fetchOne()
                 .into(EventFullDto.class);
