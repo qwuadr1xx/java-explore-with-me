@@ -21,6 +21,7 @@
         <jooq.version>3.19.7</jooq.version>
         <postgresql.version>42.7.3</postgresql.version>
         <h2.version>2.2.224</h2.version>
+        <start-class>ru.practicum.explorewithme.ServiceApplication</start-class>
     </properties>
 
     <dependencies>
@@ -76,6 +77,10 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>${start-class}</mainClass>
+                </configuration>
+
             </plugin>
 
             <plugin>
