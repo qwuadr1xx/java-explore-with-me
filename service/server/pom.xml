@@ -101,7 +101,7 @@
                 <configuration>
                     <jdbc>
                         <driver>org.postgresql.Driver</driver>
-                        <url>jdbc:postgresql://service-db:5432/service</url>
+                        <url>jdbc:postgresql://localhost:5432/service</url>
                         <user>postgres</user>
                         <password>1234</password>
                     </jdbc>
@@ -113,13 +113,13 @@
                         </database>
                         <target>
                             <packageName>ru.explorewithme.jooq</packageName>
-                            <directory>${project.build.directory}/generated-sources/jooq</directory>
+                            <directory>${project.basedir}/src/main/java/ru/practicum/explorewithme/jooq</directory>
                         </target>
                     </generator>
                 </configuration>
             </plugin>
         </plugins>
-        <sourceDirectory>${project.build.directory}/generated-sources/jooq</sourceDirectory>
+        <sourceDirectory>${project.basedir}/src/main/java/ru/practicum/explorewithme/jooq</sourceDirectory>
     </build>
 
 </project>
