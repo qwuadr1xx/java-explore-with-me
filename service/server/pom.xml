@@ -99,6 +99,7 @@
                     </dependency>
                 </dependencies>
                 <configuration>
+                    <skip>${maven.jooq.skip}</skip>
                     <jdbc>
                         <driver>org.postgresql.Driver</driver>
                         <url>jdbc:postgresql://localhost:5432/service</url>
