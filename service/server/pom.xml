@@ -85,7 +85,7 @@
                 <executions>
                     <execution>
                         <id>generate-jooq</id>
-                        <phase>generate-sources</phase>
+                        <phase>none</phase>
                         <goals>
                             <goal>generate</goal>
                         </goals>
@@ -99,7 +99,6 @@
                     </dependency>
                 </dependencies>
                 <configuration>
-                    <skip>${maven.jooq.skip}</skip>
                     <jdbc>
                         <driver>org.postgresql.Driver</driver>
                         <url>jdbc:postgresql://localhost:5432/service</url>
