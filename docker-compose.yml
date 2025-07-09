@@ -35,6 +35,7 @@ services:
     build:
       context: .
       dockerfile: service/server/Dockerfile
+    container_name: ewm-service
     depends_on:
       - service-db
     environment:

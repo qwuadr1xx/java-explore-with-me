@@ -80,7 +80,6 @@
                 <configuration>
                     <mainClass>${start-class}</mainClass>
                 </configuration>
-
             </plugin>
 
             <plugin>
