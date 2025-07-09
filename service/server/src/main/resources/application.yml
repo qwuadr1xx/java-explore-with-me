@@ -35,7 +35,7 @@ spring:
     activate:
       on-profile: docker
   datasource:
-    url: jdbc:postgresql://stats-db:5432/service
+    url: jdbc:postgresql://service-db:5432/service
     username: postgres
     password: 1234
   jpa:
