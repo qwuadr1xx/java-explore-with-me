@@ -101,7 +101,7 @@
                 <configuration>
                     <jdbc>
                         <driver>org.postgresql.Driver</driver>
-                        <url>jdbc:postgresql://localhost:5432/service</url>
+                        <url>jdbc:postgresql://service-db:5432/service</url>
                         <user>postgres</user>
                         <password>1234</password>
                     </jdbc>
