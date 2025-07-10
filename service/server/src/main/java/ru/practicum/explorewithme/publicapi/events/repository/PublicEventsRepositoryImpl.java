@@ -3,7 +3,7 @@ package ru.practicum.explorewithme.publicapi.events.repository;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
 import org.springframework.stereotype.Repository;
-import ru.explorewithme.jooq.tables.Events;
+import ru.practicum.explorewithme.jooq.ru.explorewithme.jooq.tables.Events;
 import ru.practicum.explorewithme.HitDtoIn;
 import ru.practicum.explorewithme.client.StatClient;
 import ru.practicum.explorewithme.events.EventFullDto;

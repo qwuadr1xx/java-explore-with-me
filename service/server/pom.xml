@@ -76,6 +76,9 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>src.main.java.ru.practicum.explorewithme.ServiceApplication</mainClass>
+                </configuration>
             </plugin>
 
             <plugin>
@@ -119,7 +122,7 @@
                 </configuration>
             </plugin>
         </plugins>
-        <sourceDirectory>${project.basedir}/src/main/java/ru/practicum/explorewithme/jooq</sourceDirectory>
+        <sourceDirectory>src/main/java/ru/practicum/explorewithme/jooq</sourceDirectory>
     </build>
 
 </project>

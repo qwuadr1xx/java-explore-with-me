@@ -5,8 +5,8 @@ import org.jooq.DSLContext;
 import org.jooq.Record4;
 import org.jooq.exception.DataAccessException;
 import org.springframework.stereotype.Repository;
-import ru.explorewithme.jooq.tables.Events;
-import ru.explorewithme.jooq.tables.Requests;
+import ru.practicum.explorewithme.jooq.ru.explorewithme.jooq.tables.Events;
+import ru.practicum.explorewithme.jooq.ru.explorewithme.jooq.tables.Requests;
 import ru.practicum.explorewithme.exception.NotFoundException;
 import ru.practicum.explorewithme.requests.ParticipationRequestDto;
 

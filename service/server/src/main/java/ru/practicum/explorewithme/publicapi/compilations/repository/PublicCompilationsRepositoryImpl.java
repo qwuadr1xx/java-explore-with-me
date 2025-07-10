@@ -3,7 +3,7 @@ package ru.practicum.explorewithme.publicapi.compilations.repository;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
 import org.springframework.stereotype.Repository;
-import ru.explorewithme.jooq.tables.Compilations;
+import ru.practicum.explorewithme.jooq.ru.explorewithme.jooq.tables.Compilations;
 import ru.practicum.explorewithme.complitations.CompilationDto;
 import ru.practicum.explorewithme.exception.NotFoundException;
 
