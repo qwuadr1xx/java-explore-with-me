@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.explorewithme.admin.users.service.UsersService;
 import ru.practicum.explorewithme.users.NewUserRequest;
 import ru.practicum.explorewithme.users.UserDto;
-import ru.practicum.explorewithme.users.UserShortDto;
 
 import java.util.List;
 

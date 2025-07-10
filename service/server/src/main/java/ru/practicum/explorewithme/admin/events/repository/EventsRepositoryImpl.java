@@ -58,14 +58,14 @@ public class EventsRepositoryImpl implements EventsRepository {
     public EventFullDto updateEvent(UpdateEventAdminRequest request, Long eventId) {
         Map<Field<?>, Object> updates = new HashMap<>();
 
-        Optional.ofNullable(request.getAnnotation()).ifPresent(v -> updates.put
-                (Events.EVENTS.ANNOTATION, v));
-        Optional.ofNullable(request.getCategory()).ifPresent(v -> updates.put
-                (Events.EVENTS.CATEGORY_ID, v));
-        Optional.ofNullable(request.getDescription()).ifPresent(v -> updates.put
-                (Events.EVENTS.DESCRIPTION, v));
-        Optional.ofNullable(request.getEventDate()).ifPresent(v -> updates.put
-                (Events.EVENTS.EVENT_DATE, v));
+        Optional.ofNullable(request.getAnnotation()).ifPresent(v ->
+                updates.put(Events.EVENTS.ANNOTATION, v));
+        Optional.ofNullable(request.getCategory()).ifPresent(v ->
+                updates.put(Events.EVENTS.CATEGORY_ID, v));
+        Optional.ofNullable(request.getDescription()).ifPresent(v ->
+                updates.put(Events.EVENTS.DESCRIPTION, v));
+        Optional.ofNullable(request.getEventDate()).ifPresent(v ->
+                updates.put(Events.EVENTS.EVENT_DATE, v));
 
         Optional.ofNullable(request.getLocation()).ifPresent(v -> {
             Long locId = dsl.select(Events.EVENTS.LOCATION_ID)
@@ -86,17 +86,17 @@ public class EventsRepositoryImpl implements EventsRepository {
             updates.put(Events.EVENTS.LOCATION_ID, newLocId);
         });
 
-        Optional.ofNullable(request.getPaid()).ifPresent(v -> updates.put
-                (Events.EVENTS.PAID, v));
-        Optional.ofNullable(request.getParticipantLimit()).ifPresent(v -> updates.put
-                (Events.EVENTS.PARTICIPANT_LIMIT, v));
-        Optional.ofNullable(request.getRequestModeration()).ifPresent(v -> updates.put
-                (Events.EVENTS.REQUEST_MODERATION, v));
-        Optional.ofNullable(request.getStateAction()).ifPresent(v -> updates.put
-                (Events.EVENTS.STATE,
+        Optional.ofNullable(request.getPaid()).ifPresent(v ->
+                updates.put(Events.EVENTS.PAID, v));
+        Optional.ofNullable(request.getParticipantLimit()).ifPresent(v ->
+                updates.put(Events.EVENTS.PARTICIPANT_LIMIT, v));
+        Optional.ofNullable(request.getRequestModeration()).ifPresent(v ->
+                updates.put(Events.EVENTS.REQUEST_MODERATION, v));
+        Optional.ofNullable(request.getStateAction()).ifPresent(v ->
+                updates.put(Events.EVENTS.STATE,
                         v.equals(StateAction.PUBLISH_EVENT) ? EventState.PUBLISHED : EventState.CANCELED));
-        Optional.ofNullable(request.getTitle()).ifPresent(v -> updates.put
-                (Events.EVENTS.TITLE, v));
+        Optional.ofNullable(request.getTitle()).ifPresent(v ->
+                updates.put(Events.EVENTS.TITLE, v));
 
         return updates.isEmpty()
                 ? dsl.selectFrom(Events.EVENTS).where(Events.EVENTS.ID.eq(eventId)).fetchOne().into(EventFullDto.class)

@@ -107,7 +107,6 @@ public class PrivateEventsRepositoryImpl implements EventsRepository {
 
             dsl.deleteFrom(Locations.LOCATIONS).where(Locations.LOCATIONS.ID.eq(locId)).execute();
 
-            
             Long newLocId = dsl.insertInto(Locations.LOCATIONS)
                     .set(Locations.LOCATIONS.LAT, v.getLat())
                     .set(Locations.LOCATIONS.LON, v.getLon())
