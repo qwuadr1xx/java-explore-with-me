@@ -4,6 +4,8 @@ server:
 spring:
   datasource:
     driver-class-name: org.postgresql.Driver
+  liquibase:
+    change-log: classpath:/schema.sql
 
 shareit-server:
   url: "http://localhost:8080"
