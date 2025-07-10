@@ -74,11 +74,17 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>8</source>
+                    <target>8</target>
+                </configuration>
+            </plugin>
+
+            <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                    <mainClass>src.main.java.ru.practicum.explorewithme.ServiceApplication</mainClass>
-                </configuration>
             </plugin>
 
             <plugin>
@@ -122,7 +128,7 @@
                 </configuration>
             </plugin>
         </plugins>
-        <sourceDirectory>src/main/java/ru/practicum/explorewithme/jooq</sourceDirectory>
+<!--        <sourceDirectory>src/main/java/ru/practicum/explorewithme/jooq</sourceDirectory>-->
     </build>
 
 </project>
