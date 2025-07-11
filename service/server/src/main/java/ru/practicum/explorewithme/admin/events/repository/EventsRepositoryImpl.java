@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 import org.springframework.stereotype.Repository;
+import ru.practicum.explorewithme.jooq.ru.explorewithme.jooq.tables.Categories;
 import ru.practicum.explorewithme.jooq.ru.explorewithme.jooq.tables.Events;
 import ru.practicum.explorewithme.jooq.ru.explorewithme.jooq.tables.Locations;
 import ru.practicum.explorewithme.events.EventFullDto;
@@ -12,21 +13,41 @@ import ru.practicum.explorewithme.events.UpdateEventAdminRequest;
 import ru.practicum.explorewithme.events.utils.EventState;
 import ru.practicum.explorewithme.events.utils.StateAction;
 import ru.practicum.explorewithme.exception.NotFoundException;
+import ru.practicum.explorewithme.jooq.ru.explorewithme.jooq.tables.Users;
+import ru.practicum.explorewithme.utils.RecordToEventMapper;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Repository
 @RequiredArgsConstructor
 public class EventsRepositoryImpl implements EventsRepository {
     private final DSLContext dsl;
+    private static final Set<Field<?>> SELECT_FIELDS = Set.of(
+            Events.EVENTS.ID,
+            Events.EVENTS.ANNOTATION,
+            Categories.CATEGORIES.ID,
+            Categories.CATEGORIES.NAME,
+            Events.EVENTS.CONFIRMED_REQUESTS,
+            Events.EVENTS.CREATED_ON,
+            Events.EVENTS.DESCRIPTION,
+            Events.EVENTS.EVENT_DATE,
+            Users.USERS.ID,
+            Users.USERS.NAME,
+            Locations.LOCATIONS.LAT,
+            Locations.LOCATIONS.LON,
+            Events.EVENTS.PAID,
+            Events.EVENTS.PARTICIPANT_LIMIT,
+            Events.EVENTS.PUBLISHED_ON,
+            Events.EVENTS.REQUEST_MODERATION,
+            Events.EVENTS.STATE,
+            Events.EVENTS.TITLE,
+            Events.EVENTS.VIEWS
+    );
 
     @Override
     public List<EventFullDto> getEvents(List<Long> users, List<EventState> states, List<Long> categories, LocalDateTime rangeStart, LocalDateTime rangeEnd, Integer from, Integer size) {
-        var query = dsl.selectFrom(Events.EVENTS).where(DSL.trueCondition());
+        var query = dsl.select(SELECT_FIELDS).from(Events.EVENTS).where(DSL.trueCondition());
 
         if (users != null && !users.isEmpty()) {
             query = query.and(Events.EVENTS.INITIATOR_ID.in(users));
@@ -50,7 +71,7 @@ public class EventsRepositoryImpl implements EventsRepository {
 
         return query.limit(size)
                 .offset(from)
-                .fetchInto(EventFullDto.class);
+                .stream().map(RecordToEventMapper::map).toList();
     }
 
 
@@ -98,9 +119,19 @@ public class EventsRepositoryImpl implements EventsRepository {
         Optional.ofNullable(request.getTitle()).ifPresent(v ->
                 updates.put(Events.EVENTS.TITLE, v));
 
-        return updates.isEmpty()
-                ? dsl.selectFrom(Events.EVENTS).where(Events.EVENTS.ID.eq(eventId)).fetchOne().into(EventFullDto.class)
-                : dsl.update(Events.EVENTS).set(updates).returning().fetchOne().into(EventFullDto.class);
+        if (updates.isEmpty()) {
+            throw new IllegalArgumentException("No fields to update");
+        }
+
+        dsl.update(Events.EVENTS).set(updates).execute();
+
+        return dsl.select(SELECT_FIELDS)
+                .from(Events.EVENTS)
+                .where(Events.EVENTS.ID.eq(eventId))
+                .fetchOptional()
+                .orElseThrow(() -> new NotFoundException(String.format("Event with id %s does not exist in " +
+                        "the database", eventId)))
+                .into(EventFullDto.class);
     }
 
     @Override

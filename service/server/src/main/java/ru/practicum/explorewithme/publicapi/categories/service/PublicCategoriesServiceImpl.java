@@ -2,6 +2,7 @@ package ru.practicum.explorewithme.publicapi.categories.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.explorewithme.categories.CategoryDto;
 import ru.practicum.explorewithme.publicapi.categories.repository.CategoriesRepository;
 
@@ -13,11 +14,13 @@ public class PublicCategoriesServiceImpl implements CategoriesService {
     private final CategoriesRepository categoriesRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public List<CategoryDto> getCategories(Integer from, Integer size) {
         return categoriesRepository.getCategories(from, size);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public CategoryDto getCategory(Long catId) {
         return categoriesRepository.getCategory(catId);
     }

@@ -3,6 +3,7 @@ package ru.practicum.explorewithme.admin.events.service;
 import lombok.RequiredArgsConstructor;
 import org.jooq.exception.DataAccessException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.explorewithme.admin.events.repository.EventsRepository;
 import ru.practicum.explorewithme.events.EventFullDto;
 import ru.practicum.explorewithme.events.EventValidationFields;
@@ -19,11 +20,13 @@ public class EventsServiceImpl implements EventsService {
     private final EventsRepository eventsRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public List<EventFullDto> getEvents(List<Long> users, List<EventState> states, List<Long> categories, LocalDateTime rangeStart, LocalDateTime rangeEnd, Integer from, Integer size) {
         return eventsRepository.getEvents(users, states, categories, rangeStart, rangeEnd, from, size);
     }
 
     @Override
+    @Transactional
     public EventFullDto updateEvent(UpdateEventAdminRequest request, Long eventId) {
         validateEvent(request, eventId);
         return eventsRepository.updateEvent(request, eventId);

@@ -59,6 +59,16 @@ public class GlobalExceptionHandler {
                 .build();
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiError handleIllegalArgumentException(IllegalArgumentException e) {
+        return ApiError.builder()
+                .message(e.getMessage())
+                .reason("Illegal argument.")
+                .status("CONFLICT")
+                .build();
+    }
+
     @ExceptionHandler(DataAccessException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ApiError handlerDataAccessException(DataAccessException e) {

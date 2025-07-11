@@ -2,11 +2,10 @@ package ru.practicum.explorewithme.internal.events.repository;
 
 import lombok.RequiredArgsConstructor;
 import org.jooq.*;
+import org.jooq.exception.DataAccessException;
 import org.springframework.stereotype.Repository;
-import ru.practicum.explorewithme.jooq.ru.explorewithme.jooq.tables.Events;
-import ru.practicum.explorewithme.jooq.ru.explorewithme.jooq.tables.Locations;
-import ru.practicum.explorewithme.jooq.ru.explorewithme.jooq.tables.Requests;
-import ru.practicum.explorewithme.jooq.ru.explorewithme.jooq.tables.Users;
+import ru.practicum.explorewithme.categories.CategoryDto;
+import ru.practicum.explorewithme.jooq.ru.explorewithme.jooq.tables.*;
 import ru.practicum.explorewithme.jooq.ru.explorewithme.jooq.tables.records.RequestsRecord;
 import ru.practicum.explorewithme.events.EventFullDto;
 import ru.practicum.explorewithme.events.NewEventDto;
@@ -19,31 +18,64 @@ import ru.practicum.explorewithme.exception.NotFoundException;
 import ru.practicum.explorewithme.requests.EventRequestStatusUpdateRequest;
 import ru.practicum.explorewithme.requests.EventRequestStatusUpdateResult;
 import ru.practicum.explorewithme.requests.ParticipationRequestDto;
+import ru.practicum.explorewithme.users.UserDto;
+import ru.practicum.explorewithme.users.UserShortDto;
+import ru.practicum.explorewithme.utils.RecordToEventMapper;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Repository
 @RequiredArgsConstructor
 public class PrivateEventsRepositoryImpl implements EventsRepository {
     private final DSLContext dsl;
+    private static final Set<Field<?>> SELECT_FIELDS = Set.of(
+            Events.EVENTS.ID,
+            Events.EVENTS.ANNOTATION,
+            Categories.CATEGORIES.ID,
+            Categories.CATEGORIES.NAME,
+            Events.EVENTS.CONFIRMED_REQUESTS,
+            Events.EVENTS.CREATED_ON,
+            Events.EVENTS.DESCRIPTION,
+            Events.EVENTS.EVENT_DATE,
+            Users.USERS.ID,
+            Users.USERS.NAME,
+            Locations.LOCATIONS.LAT,
+            Locations.LOCATIONS.LON,
+            Events.EVENTS.PAID,
+            Events.EVENTS.PARTICIPANT_LIMIT,
+            Events.EVENTS.PUBLISHED_ON,
+            Events.EVENTS.REQUEST_MODERATION,
+            Events.EVENTS.STATE,
+            Events.EVENTS.TITLE,
+            Events.EVENTS.VIEWS
+    );
 
     @Override
     public List<EventFullDto> getEvents(Long userId, Integer from, Integer size) {
-        return dsl.selectFrom(Events.EVENTS)
+        return dsl.select(SELECT_FIELDS)
+                .from(Events.EVENTS)
+                .join(Categories.CATEGORIES).on(Categories.CATEGORIES.ID.eq(Events.EVENTS.CATEGORY_ID))
+                .join(Locations.LOCATIONS).on(Locations.LOCATIONS.ID.eq(Events.EVENTS.LOCATION_ID))
+                .join(Users.USERS).on(Users.USERS.ID.eq(Events.EVENTS.INITIATOR_ID))
                 .where(Events.EVENTS.INITIATOR_ID.eq(userId))
                 .offset(from)
                 .limit(size)
                 .fetch()
-                .into(EventFullDto.class);
+                .stream().map(RecordToEventMapper::map).toList();
     }
 
     @Override
     public EventFullDto addEvent(NewEventDto newEventDto, Long userId) {
-        findUserById(userId);
+        UserDto user = findUserById(userId);
+
+        Long locId = dsl.insertInto(Locations.LOCATIONS)
+                .set(Locations.LOCATIONS.LAT, newEventDto.getLocation().getLat())
+                .set(Locations.LOCATIONS.LON, newEventDto.getLocation().getLon())
+                .returningResult(Locations.LOCATIONS.ID)
+                .fetchOptional()
+                .orElseThrow(() -> new DataAccessException("Problem with inserting location"))
+                .into(Long.class);
 
         var query = dsl.insertInto(Events.EVENTS)
                 .set(Events.EVENTS.INITIATOR_ID, userId)
@@ -52,7 +84,9 @@ public class PrivateEventsRepositoryImpl implements EventsRepository {
                 .set(Events.EVENTS.DESCRIPTION, newEventDto.getDescription())
                 .set(Events.EVENTS.EVENT_DATE, newEventDto.getEventDate())
                 .set(Events.EVENTS.TITLE, newEventDto.getTitle())
-                .set(Events.EVENTS.CREATED_ON, LocalDateTime.now());
+                .set(Events.EVENTS.CREATED_ON, LocalDateTime.now())
+                .set(Events.EVENTS.LOCATION_ID, locId)
+                .set(Events.EVENTS.STATE, "PENDING");
 
         if (newEventDto.getPaid() != null) {
             query = query.set(Events.EVENTS.PAID, newEventDto.getPaid());
@@ -68,18 +102,35 @@ public class PrivateEventsRepositoryImpl implements EventsRepository {
 
         return query.returning()
                 .fetchOne()
-                .into(EventFullDto.class);
+                .into(EventFullDto.class).toBuilder()
+                .location(newEventDto.getLocation())
+                .category(
+                        dsl.select(Categories.CATEGORIES.ID, Categories.CATEGORIES.NAME)
+                                .from(Categories.CATEGORIES)
+                                .where(Categories.CATEGORIES.ID.eq(newEventDto.getCategory()))
+                                .fetchOneInto(CategoryDto.class)
+                )
+                .initiator(
+                        new UserShortDto(
+                                user.getId(),
+                                user.getName()
+                        )
+                )
+                .build();
     }
 
     @Override
     public EventFullDto getEventById(Long userId, Long eventId) {
-        return dsl.selectFrom(Events.EVENTS)
+        return RecordToEventMapper.map(dsl.select(SELECT_FIELDS)
+                .from(Events.EVENTS)
+                .join(Categories.CATEGORIES).on(Categories.CATEGORIES.ID.eq(Events.EVENTS.CATEGORY_ID))
+                .join(Locations.LOCATIONS).on(Locations.LOCATIONS.ID.eq(Events.EVENTS.LOCATION_ID))
+                .join(Users.USERS).on(Users.USERS.ID.eq(Events.EVENTS.INITIATOR_ID))
                 .where(Events.EVENTS.INITIATOR_ID.eq(userId))
                 .and(Events.EVENTS.ID.eq(eventId))
                 .fetchOptional()
                 .orElseThrow(() -> new NotFoundException(String.format("Event with id %d not found for user %d",
-                        eventId, userId)))
-                .into(EventFullDto.class);
+                        eventId, userId))));
     }
 
     @Override
@@ -110,7 +161,7 @@ public class PrivateEventsRepositoryImpl implements EventsRepository {
             Long newLocId = dsl.insertInto(Locations.LOCATIONS)
                     .set(Locations.LOCATIONS.LAT, v.getLat())
                     .set(Locations.LOCATIONS.LON, v.getLon())
-                    .returning(Locations.LOCATIONS.ID)
+                    .returningResult(Locations.LOCATIONS.ID)
                     .fetchOne()
                     .into(Long.class);
 
@@ -124,12 +175,20 @@ public class PrivateEventsRepositoryImpl implements EventsRepository {
             throw new IllegalArgumentException("No fields to update");
         }
 
-        return dsl.update(Events.EVENTS)
+        dsl.update(Events.EVENTS)
                 .set(updates)
                 .where(Events.EVENTS.ID.eq(eventId))
-                .returning()
-                .fetchOne()
-                .into(EventFullDto.class);
+                .execute();
+
+        return RecordToEventMapper.map(dsl.select(SELECT_FIELDS)
+                .from(Events.EVENTS)
+                .join(Categories.CATEGORIES).on(Categories.CATEGORIES.ID.eq(Events.EVENTS.CATEGORY_ID))
+                .join(Locations.LOCATIONS).on(Locations.LOCATIONS.ID.eq(Events.EVENTS.LOCATION_ID))
+                .join(Users.USERS).on(Users.USERS.ID.eq(Events.EVENTS.INITIATOR_ID))
+                .where(Events.EVENTS.INITIATOR_ID.eq(userId))
+                .fetchOptional()
+                .orElseThrow(() -> new NotFoundException(String.format("Event with id %d not found for user %d",
+                        eventId, userId))));
     }
 
     @Override
@@ -318,11 +377,12 @@ public class PrivateEventsRepositoryImpl implements EventsRepository {
         }
     }
 
-    private void findUserById(Long userId) {
-        dsl.selectFrom(Users.USERS)
+    private UserDto findUserById(Long userId) {
+        return dsl.selectFrom(Users.USERS)
                 .where(Users.USERS.ID.eq(userId))
                 .fetchOptional()
-                .orElseThrow(() -> new NotFoundException(String.format("User with id %d not found", userId)));
+                .orElseThrow(() -> new NotFoundException(String.format("User with id %d not found", userId)))
+                .into(UserDto.class);
     }
 
     private void findUserEvent(Long userId, Long eventId) {

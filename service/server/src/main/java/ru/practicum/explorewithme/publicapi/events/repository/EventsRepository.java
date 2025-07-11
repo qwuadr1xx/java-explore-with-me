@@ -15,8 +15,9 @@ public interface EventsRepository {
                                  Boolean onlyAvailable,
                                  Sort sort,
                                  Integer from,
-                                 Integer size,
-                                 String ipAddress);
+                                 Integer size);
 
-    EventFullDto getEventById(Long eventId, String ipAddress);
+    EventFullDto getEventById(Long eventId);
+
+    void addView(Long eventId);
 }

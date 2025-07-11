@@ -19,8 +19,7 @@ public class StatClientImpl implements StatClient {
     private final RestClient restClient;
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-
-    public StatClientImpl(@Value("${shareit-server.url}") String serverUrl) {
+    public StatClientImpl(@Value("${ewm-stat-server.url}") String serverUrl) {
         this.restClient = RestClient.builder().baseUrl(serverUrl).build();
     }
 
@@ -38,25 +37,16 @@ public class StatClientImpl implements StatClient {
                                                     LocalDateTime end,
                                                     List<String> uris,
                                                     Boolean unique) {
-        UriComponentsBuilder builder;
+        UriComponentsBuilder builder = UriComponentsBuilder.fromPath("/stats")
+                .queryParam("start", FORMATTER.format(start))
+                .queryParam("end", FORMATTER.format(end));
 
         if (unique != null) {
-            builder = UriComponentsBuilder
-                    .fromPath("/stats")
-                    .queryParam("start", FORMATTER.format(start))
-                    .queryParam("end", FORMATTER.format(end))
-                    .queryParam("unique", unique);
-        } else {
-            builder = UriComponentsBuilder
-                    .fromPath("/stats")
-                    .queryParam("start", FORMATTER.format(start))
-                    .queryParam("end", FORMATTER.format(end));
+            builder.queryParam("unique", unique);
         }
 
         if (uris != null && !uris.isEmpty()) {
-            for (String uri : uris) {
-                builder.queryParam("uris", uri);
-            }
+            builder.queryParam("uris", uris.toArray());
         }
 
         URI uri = builder.build(true).toUri();

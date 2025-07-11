@@ -23,7 +23,6 @@ public class NewEventDto {
     private String annotation;
 
     @NotNull(message = "Field: category. Error: must not be blank. Value: null")
-    @NotBlank(message = "Field: category. Error: must not be blank. Value: ''")
     private Long category;
 
     @NotNull(message = "Field: description. Error: must not be blank. Value: null")
@@ -32,12 +31,10 @@ public class NewEventDto {
     private String description;
 
     @NotNull(message = "Field: eventDate. Error: must not be blank. Value: null")
-    @NotBlank(message = "Field: eventDate. Error: must not be blank. Value: ''")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventDate;
 
     @NotNull(message = "Field: location. Error: must not be blank. Value: null")
-    @NotBlank(message = "Field: location. Error: must not be blank. Value: ''")
     private Location location;
 
     private Boolean paid;

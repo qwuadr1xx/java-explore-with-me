@@ -7,9 +7,14 @@ spring:
   liquibase:
     change-log: classpath:/schema.sql
 
-shareit-server:
-  url: "http://localhost:8080"
+ewm-stat-server:
+  url: "http://localhost:9090"
 
+logging:
+  level:
+    root: TRACE
+  org:
+    jooq: TRACE
 ---
 
 spring:

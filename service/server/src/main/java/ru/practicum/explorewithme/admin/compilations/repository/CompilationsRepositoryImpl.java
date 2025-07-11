@@ -2,22 +2,36 @@ package ru.practicum.explorewithme.admin.compilations.repository;
 
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
+import org.jooq.Field;
 import org.springframework.stereotype.Repository;
-import ru.practicum.explorewithme.jooq.ru.explorewithme.jooq.tables.CompilationEvents;
-import ru.practicum.explorewithme.jooq.ru.explorewithme.jooq.tables.Compilations;
-import ru.practicum.explorewithme.jooq.ru.explorewithme.jooq.tables.Events;
+import ru.practicum.explorewithme.jooq.ru.explorewithme.jooq.tables.*;
 import ru.practicum.explorewithme.complitations.CompilationDto;
 import ru.practicum.explorewithme.complitations.NewCompilationDto;
 import ru.practicum.explorewithme.complitations.UpdateCompilationRequest;
 import ru.practicum.explorewithme.events.EventShortDto;
 import ru.practicum.explorewithme.exception.NotFoundException;
+import ru.practicum.explorewithme.utils.RecordToShortEventMapper;
 
 import java.util.List;
+import java.util.Set;
 
 @Repository
 @RequiredArgsConstructor
 public class CompilationsRepositoryImpl implements CompilationsRepository {
     private final DSLContext dsl;
+    private static final Set<Field<?>> SELECT_FIELDS = Set.of(
+            Events.EVENTS.ID,
+            Events.EVENTS.ANNOTATION,
+            Categories.CATEGORIES.ID,
+            Categories.CATEGORIES.NAME,
+            Events.EVENTS.CONFIRMED_REQUESTS,
+            Events.EVENTS.EVENT_DATE,
+            Users.USERS.ID,
+            Users.USERS.NAME,
+            Events.EVENTS.PAID,
+            Events.EVENTS.TITLE,
+            Events.EVENTS.VIEWS
+    );
 
     @Override
     public CompilationDto createCompilation(NewCompilationDto newCompilationDto) {
@@ -37,9 +51,12 @@ public class CompilationsRepositoryImpl implements CompilationsRepository {
                             .toList()
             ).execute();
 
-            List<EventShortDto> eventShortDtoList = dsl.selectFrom(Events.EVENTS)
+            List<EventShortDto> eventShortDtoList = dsl.select(SELECT_FIELDS)
+                    .from(Events.EVENTS)
+                    .join(Categories.CATEGORIES).on(Categories.CATEGORIES.ID.eq(Events.EVENTS.CATEGORY_ID))
+                    .join(Users.USERS).on(Users.USERS.ID.eq(Events.EVENTS.INITIATOR_ID))
                     .where(Events.EVENTS.ID.in(newCompilationDto.getEvents()))
-                    .fetchInto(EventShortDto.class);
+                    .stream().map(RecordToShortEventMapper::map).toList();
 
             compilation.setEvents(eventShortDtoList);
         }
@@ -83,9 +100,12 @@ public class CompilationsRepositoryImpl implements CompilationsRepository {
                             .toList()
             ).execute();
 
-            List<EventShortDto> eventShortDtoList = dsl.selectFrom(Events.EVENTS)
+            List<EventShortDto> eventShortDtoList = dsl.select(SELECT_FIELDS)
+                    .from(Events.EVENTS)
+                    .join(Categories.CATEGORIES).on(Categories.CATEGORIES.ID.eq(Events.EVENTS.CATEGORY_ID))
+                    .join(Users.USERS).on(Users.USERS.ID.eq(Events.EVENTS.INITIATOR_ID))
                     .where(Events.EVENTS.ID.in(updateCompilationRequest.getEvents()))
-                    .fetchInto(EventShortDto.class);
+                    .stream().map(RecordToShortEventMapper::map).toList();
 
             compilation.setEvents(eventShortDtoList);
         }
