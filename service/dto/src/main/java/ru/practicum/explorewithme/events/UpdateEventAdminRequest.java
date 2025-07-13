@@ -1,6 +1,7 @@
 package ru.practicum.explorewithme.events;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,10 +15,12 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder(toBuilder = true)
 public class UpdateEventAdminRequest {
+    @Size(min = 20, max = 2000)
     private String annotation;
 
     private Long category;
 
+    @Size(min = 20, max = 7000)
     private String description;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -33,5 +36,6 @@ public class UpdateEventAdminRequest {
 
     private StateAction stateAction;
 
+    @Size(min = 3, max = 120)
     private String title;
 }

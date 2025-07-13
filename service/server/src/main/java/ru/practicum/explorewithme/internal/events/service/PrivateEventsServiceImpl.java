@@ -46,6 +46,10 @@ public class PrivateEventsServiceImpl implements EventsService {
     @Override
     @Transactional
     public EventFullDto updateEventById(UpdateEventUserRequest request, Long userId, Long eventId) {
+        if (request.getEventDate() != null && request.getEventDate().isBefore(LocalDateTime.now().plusHours(2))) {
+            throw new IllegalDateException("Event date cannot be before 2 hours from now");
+        }
+
         return eventsRepository.updateEventById(request, userId, eventId);
     }
 

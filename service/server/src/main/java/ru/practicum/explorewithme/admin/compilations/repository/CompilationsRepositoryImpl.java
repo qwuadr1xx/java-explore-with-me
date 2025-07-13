@@ -4,16 +4,15 @@ import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.springframework.stereotype.Repository;
-import ru.practicum.explorewithme.jooq.ru.explorewithme.jooq.tables.*;
 import ru.practicum.explorewithme.complitations.CompilationDto;
 import ru.practicum.explorewithme.complitations.NewCompilationDto;
 import ru.practicum.explorewithme.complitations.UpdateCompilationRequest;
 import ru.practicum.explorewithme.events.EventShortDto;
 import ru.practicum.explorewithme.exception.NotFoundException;
+import ru.practicum.explorewithme.jooq.tables.*;
 import ru.practicum.explorewithme.utils.RecordToShortEventMapper;
 
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Repository
 @RequiredArgsConstructor
@@ -35,9 +34,14 @@ public class CompilationsRepositoryImpl implements CompilationsRepository {
 
     @Override
     public CompilationDto createCompilation(NewCompilationDto newCompilationDto) {
+        Map<Field<?>, Object> fields = new HashMap<>();
+        Optional.ofNullable(newCompilationDto.getTitle()).ifPresent(v ->
+                fields.put(Compilations.COMPILATIONS.TITLE, v));
+        Optional.ofNullable(newCompilationDto.getPinned()).ifPresent(v ->
+                fields.put(Compilations.COMPILATIONS.PINNED, v));
+
         CompilationDto compilation = dsl.insertInto(Compilations.COMPILATIONS)
-                .set(Compilations.COMPILATIONS.PINNED, newCompilationDto.getPinned())
-                .set(Compilations.COMPILATIONS.TITLE, newCompilationDto.getTitle())
+                .set(fields)
                 .returning()
                 .fetchOne()
                 .into(CompilationDto.class);
@@ -59,6 +63,8 @@ public class CompilationsRepositoryImpl implements CompilationsRepository {
                     .stream().map(RecordToShortEventMapper::map).toList();
 
             compilation.setEvents(eventShortDtoList);
+        } else {
+            compilation.setEvents(List.of());
         }
 
         return compilation;
@@ -77,9 +83,14 @@ public class CompilationsRepositoryImpl implements CompilationsRepository {
 
     @Override
     public CompilationDto updateCompilation(UpdateCompilationRequest updateCompilationRequest, Long compId) {
+        Map<Field<?>, Object> updates = new HashMap<>();
+        Optional.ofNullable(updateCompilationRequest.getTitle()).ifPresent(v ->
+                updates.put(Compilations.COMPILATIONS.TITLE, v));
+        Optional.ofNullable(updateCompilationRequest.getPinned()).ifPresent(v ->
+                updates.put(Compilations.COMPILATIONS.PINNED, v));
+
         CompilationDto compilation = dsl.update(Compilations.COMPILATIONS)
-                .set(Compilations.COMPILATIONS.TITLE, updateCompilationRequest.getTitle())
-                .set(Compilations.COMPILATIONS.PINNED, updateCompilationRequest.getPinned())
+                .set(updates)
                 .where(Compilations.COMPILATIONS.ID.eq(compId))
                 .returning()
                 .fetchOptional()
@@ -108,6 +119,8 @@ public class CompilationsRepositoryImpl implements CompilationsRepository {
                     .stream().map(RecordToShortEventMapper::map).toList();
 
             compilation.setEvents(eventShortDtoList);
+        } else {
+            compilation.setEvents(List.of());
         }
 
         return compilation;

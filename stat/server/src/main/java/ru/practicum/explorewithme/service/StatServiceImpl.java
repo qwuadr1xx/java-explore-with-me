@@ -27,7 +27,19 @@ public class StatServiceImpl implements StatService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ViewStats> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
+    public List<ViewStats> getStats(
+            LocalDateTime start,
+            LocalDateTime end,
+            List<String> uris,
+            Boolean unique
+    ) {
+        if (start == null) {
+            start = LocalDateTime.of(1970, 1, 1, 0, 0);
+        }
+        if (end == null) {
+            end = LocalDateTime.of(2099, 12, 31, 23, 59);
+        }
+
         if (start.isAfter(end)) {
             throw new InvalidDateException(start, end);
         }

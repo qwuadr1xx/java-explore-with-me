@@ -1,12 +1,14 @@
 package ru.practicum.explorewithme.publicapi.events.service;
 
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.explorewithme.HitDtoIn;
 import ru.practicum.explorewithme.client.StatClient;
 import ru.practicum.explorewithme.events.EventFullDto;
 import ru.practicum.explorewithme.events.utils.Sort;
+import ru.practicum.explorewithme.exception.BadRequestException;
 import ru.practicum.explorewithme.publicapi.events.repository.EventsRepository;
 
 import java.time.LocalDateTime;
@@ -27,6 +29,13 @@ public class PublicEventsServiceImpl implements EventsService {
             rangeStart = LocalDateTime.now();
         }
 
+        if (rangeEnd != null) {
+            if (rangeEnd.isBefore(rangeStart)) {
+                throw new BadRequestException("The end date cannot be before the start date");
+            }
+        }
+
+
         List<EventFullDto> eventFullDtoList =  eventsRepository.getEvents(text, categories, paid, rangeStart, rangeEnd,
                 onlyAvailable, sort, from, size);
 
@@ -34,10 +43,7 @@ public class PublicEventsServiceImpl implements EventsService {
             return List.of();
         }
 
-        eventFullDtoList.stream().map(EventFullDto::getId).forEach(id -> {
-            addView(id);
-            updateEventStat(id, ipAddress);
-        });
+        eventFullDtoList.stream().map(EventFullDto::getId).forEach(id -> updateEventStat(id, ipAddress));
 
         return eventFullDtoList;
     }
@@ -46,13 +52,8 @@ public class PublicEventsServiceImpl implements EventsService {
     @Transactional
     public EventFullDto getEventById(Long eventId, String ipAddress) {
         EventFullDto eventFullDto = eventsRepository.getEventById(eventId);
-        addView(eventId);
         updateEventStat(eventId, ipAddress);
         return eventFullDto;
-    }
-
-    private void addView(Long eventId) {
-        eventsRepository.addView(eventId);
     }
 
     private void updateEventStat(Long eventId, String ipAddress) {

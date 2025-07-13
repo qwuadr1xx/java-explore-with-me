@@ -18,5 +18,5 @@ public class ApiError {
 
     private String status;
 
-    private LocalDateTime timestamp = LocalDateTime.now();
+    private LocalDateTime timestamp;
 }

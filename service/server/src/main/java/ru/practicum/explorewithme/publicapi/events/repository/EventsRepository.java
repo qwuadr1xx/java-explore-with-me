@@ -18,6 +18,4 @@ public interface EventsRepository {
                                  Integer size);
 
     EventFullDto getEventById(Long eventId);
-
-    void addView(Long eventId);
 }

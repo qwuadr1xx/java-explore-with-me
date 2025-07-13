@@ -5,8 +5,9 @@ import org.jooq.*;
 import org.jooq.exception.DataAccessException;
 import org.springframework.stereotype.Repository;
 import ru.practicum.explorewithme.categories.CategoryDto;
-import ru.practicum.explorewithme.jooq.ru.explorewithme.jooq.tables.*;
-import ru.practicum.explorewithme.jooq.ru.explorewithme.jooq.tables.records.RequestsRecord;
+import ru.practicum.explorewithme.exception.InvalidStateException;
+import ru.practicum.explorewithme.jooq.tables.*;
+import ru.practicum.explorewithme.jooq.tables.records.RequestsRecord;
 import ru.practicum.explorewithme.events.EventFullDto;
 import ru.practicum.explorewithme.events.NewEventDto;
 import ru.practicum.explorewithme.events.UpdateEventUserRequest;
@@ -104,18 +105,11 @@ public class PrivateEventsRepositoryImpl implements EventsRepository {
                 .fetchOne()
                 .into(EventFullDto.class).toBuilder()
                 .location(newEventDto.getLocation())
-                .category(
-                        dsl.select(Categories.CATEGORIES.ID, Categories.CATEGORIES.NAME)
+                .category(dsl.select(Categories.CATEGORIES.ID, Categories.CATEGORIES.NAME)
                                 .from(Categories.CATEGORIES)
                                 .where(Categories.CATEGORIES.ID.eq(newEventDto.getCategory()))
-                                .fetchOneInto(CategoryDto.class)
-                )
-                .initiator(
-                        new UserShortDto(
-                                user.getId(),
-                                user.getName()
-                        )
-                )
+                                .fetchOneInto(CategoryDto.class))
+                .initiator(new UserShortDto(user.getId(), user.getName()))
                 .build();
     }
 
@@ -135,7 +129,11 @@ public class PrivateEventsRepositoryImpl implements EventsRepository {
 
     @Override
     public EventFullDto updateEventById(UpdateEventUserRequest request, Long userId, Long eventId) {
-        findUserEvent(userId, eventId);
+        String state = findUserEvent(userId, eventId);
+
+        if (state.equals(EventState.PUBLISHED.toString())) {
+            throw new InvalidStateException(String.format("Event with id %d is in %s state", eventId, state));
+        }
 
         Map<Field<?>, Object> updates = new HashMap<>();
 
@@ -148,25 +146,18 @@ public class PrivateEventsRepositoryImpl implements EventsRepository {
         Optional.ofNullable(request.getRequestModeration()).ifPresent(v -> updates.put(Events.EVENTS.REQUEST_MODERATION, v));
         Optional.ofNullable(request.getCategory()).ifPresent(v -> updates.put(Events.EVENTS.CATEGORY_ID, v));
 
-        Optional.ofNullable(request.getLocation()).ifPresent(v -> {
-            Long locId = dsl.select(Events.EVENTS.LOCATION_ID)
-                    .from(Events.EVENTS)
-                    .where(Events.EVENTS.ID.eq(eventId))
-                    .fetchOptional()
-                    .orElseThrow(() -> new NotFoundException(String.format("Event with id %d not found", eventId)))
-                    .into(Long.class);
-
-            dsl.deleteFrom(Locations.LOCATIONS).where(Locations.LOCATIONS.ID.eq(locId)).execute();
-
-            Long newLocId = dsl.insertInto(Locations.LOCATIONS)
-                    .set(Locations.LOCATIONS.LAT, v.getLat())
-                    .set(Locations.LOCATIONS.LON, v.getLon())
-                    .returningResult(Locations.LOCATIONS.ID)
-                    .fetchOne()
-                    .into(Long.class);
-
-            updates.put(Events.EVENTS.LOCATION_ID, newLocId);
-        });
+        Optional.ofNullable(request.getLocation()).ifPresent(v -> dsl.update(Locations.LOCATIONS)
+                .set(Locations.LOCATIONS.LAT, v.getLat())
+                .set(Locations.LOCATIONS.LON, v.getLon())
+                .where(Locations.LOCATIONS.ID.eq(
+                        dsl.select(Events.EVENTS.LOCATION_ID)
+                                .from(Events.EVENTS)
+                                .where(Events.EVENTS.ID.eq(eventId))
+                                .fetchOptional()
+                                .orElseThrow(() -> new NotFoundException(String.format("Event with id %d not found", eventId)))
+                                .into(Long.class)
+                ))
+                .execute());
 
         Optional.ofNullable(request.getStateAction()).ifPresent(v -> updates.put(Events.EVENTS.STATE,
                 v.equals(StateAction.SEND_TO_REVIEW) ? EventState.PENDING : EventState.CANCELED));
@@ -193,15 +184,25 @@ public class PrivateEventsRepositoryImpl implements EventsRepository {
 
     @Override
     public List<ParticipationRequestDto> getEventsRequests(Long userId, Long eventId) {
-        return dsl.selectFrom(Requests.REQUESTS)
+        return dsl.select(Requests.REQUESTS.ID, Requests.REQUESTS.REQUESTER, Requests.REQUESTS.STATUS,
+                        Requests.REQUESTS.EVENT_ID, Requests.REQUESTS.CREATED)
+                .from(Requests.REQUESTS)
+                .join(Events.EVENTS).on(Events.EVENTS.INITIATOR_ID.eq(userId))
                 .where(Requests.REQUESTS.EVENT_ID.eq(eventId))
-                .and(Requests.REQUESTS.REQUESTER.eq(userId))
-                .fetchInto(ParticipationRequestDto.class);
+                .stream().map(requestsRecord -> ParticipationRequestDto.builder()
+                        .id(requestsRecord.getValue(Requests.REQUESTS.ID))
+                        .requester(requestsRecord.getValue(Requests.REQUESTS.REQUESTER))
+                        .status(requestsRecord.getValue(Requests.REQUESTS.STATUS))
+                        .event(requestsRecord.getValue(Requests.REQUESTS.EVENT_ID))
+                        .created(requestsRecord.getValue(Requests.REQUESTS.CREATED))
+                        .build())
+                .toList();
     }
 
     @Override
     public EventRequestStatusUpdateResult updateRequestStatus(EventRequestStatusUpdateRequest request,
                                                               Long userId, Long eventId) {
+
         findUserEvent(userId, eventId);
 
         List<Long> requestIds = request.getRequestIds();
@@ -213,11 +214,16 @@ public class PrivateEventsRepositoryImpl implements EventsRepository {
                         Events.EVENTS.REQUEST_MODERATION)
                 .from(Events.EVENTS)
                 .where(Events.EVENTS.ID.eq(eventId))
-                .fetchOne();
+                .fetchOptional()
+                .orElseThrow(() -> new NotFoundException(String.format("Event with id %d not found for user %d", eventId, userId)));
 
         Integer confirmedRequestsInEvent = recordMap.get(Events.EVENTS.CONFIRMED_REQUESTS);
         Integer participantLimit = recordMap.get(Events.EVENTS.PARTICIPANT_LIMIT);
         Boolean requestModeration = recordMap.get(Events.EVENTS.REQUEST_MODERATION);
+
+        if (confirmedRequestsInEvent.equals(participantLimit)) {
+            throw new DataAccessException("Event is full. No more requests can be added");
+        }
 
         if (participantLimit != 0) {
             List<Long> firstIds = requestIds.subList(0, Math.min(requestIds.size(),
@@ -261,13 +267,27 @@ public class PrivateEventsRepositoryImpl implements EventsRepository {
                             .set(Requests.REQUESTS.STATUS, "CONFIRMED")
                             .where(Requests.REQUESTS.ID.in(firstIds))
                             .returning()
-                            .fetchInto(ParticipationRequestDto.class);
+                            .stream().map(requestsRecord -> ParticipationRequestDto.builder()
+                                    .id(requestsRecord.getId())
+                                    .requester(requestsRecord.getRequester())
+                                    .status(requestsRecord.getStatus())
+                                    .event(requestsRecord.getEventId())
+                                    .created(requestsRecord.getCreated())
+                                    .build())
+                            .toList();
 
                     List<ParticipationRequestDto> rejectedStatusList = dsl.update(Requests.REQUESTS)
                             .set(Requests.REQUESTS.STATUS, "REJECTED")
                             .where(Requests.REQUESTS.ID.in(lastIds))
                             .returning()
-                            .fetchInto(ParticipationRequestDto.class);
+                            .stream().map(requestsRecord -> ParticipationRequestDto.builder()
+                                    .id(requestsRecord.getId())
+                                    .requester(requestsRecord.getRequester())
+                                    .status(requestsRecord.getStatus())
+                                    .event(requestsRecord.getEventId())
+                                    .created(requestsRecord.getCreated())
+                                    .build())
+                            .toList();
 
                     dsl.update(Events.EVENTS)
                             .set(Events.EVENTS.CONFIRMED_REQUESTS, confirmedRequestsInEvent + firstIds.size())
@@ -283,7 +303,14 @@ public class PrivateEventsRepositoryImpl implements EventsRepository {
                             .set(Requests.REQUESTS.STATUS, newStatus.toString())
                             .where(Requests.REQUESTS.ID.in(requestIds))
                             .returning()
-                            .fetchInto(ParticipationRequestDto.class);
+                            .stream().map(requestsRecord -> ParticipationRequestDto.builder()
+                                    .id(requestsRecord.getId())
+                                    .requester(requestsRecord.getRequester())
+                                    .status(requestsRecord.getStatus())
+                                    .event(requestsRecord.getEventId())
+                                    .created(requestsRecord.getCreated())
+                                    .build())
+                            .toList();
 
                     return EventRequestStatusUpdateResult.builder()
                             .rejectedRequests(rejectedStatusList)
@@ -294,13 +321,27 @@ public class PrivateEventsRepositoryImpl implements EventsRepository {
                         .set(Requests.REQUESTS.STATUS, "CONFIRMED")
                         .where(Requests.REQUESTS.ID.in(firstIds))
                         .returning()
-                        .fetchInto(ParticipationRequestDto.class);
+                        .stream().map(requestsRecord -> ParticipationRequestDto.builder()
+                                .id(requestsRecord.getId())
+                                .requester(requestsRecord.getRequester())
+                                .status(requestsRecord.getStatus())
+                                .event(requestsRecord.getEventId())
+                                .created(requestsRecord.getCreated())
+                                .build())
+                        .toList();
 
                 List<ParticipationRequestDto> rejectedStatusList = dsl.update(Requests.REQUESTS)
                         .set(Requests.REQUESTS.STATUS, "REJECTED")
                         .where(Requests.REQUESTS.ID.in(lastIds))
                         .returning()
-                        .fetchInto(ParticipationRequestDto.class);
+                        .stream().map(requestsRecord -> ParticipationRequestDto.builder()
+                                .id(requestsRecord.getId())
+                                .requester(requestsRecord.getRequester())
+                                .status(requestsRecord.getStatus())
+                                .event(requestsRecord.getEventId())
+                                .created(requestsRecord.getCreated())
+                                .build())
+                        .toList();
 
                 dsl.update(Events.EVENTS)
                         .set(Events.EVENTS.CONFIRMED_REQUESTS, confirmedRequestsInEvent + firstIds.size())
@@ -337,7 +378,14 @@ public class PrivateEventsRepositoryImpl implements EventsRepository {
                             .set(Requests.REQUESTS.STATUS, "CONFIRMED")
                             .where(Requests.REQUESTS.ID.in(requestIds))
                             .returning()
-                            .fetchInto(ParticipationRequestDto.class);
+                            .stream().map(requestsRecord -> ParticipationRequestDto.builder()
+                                    .id(requestsRecord.getId())
+                                    .requester(requestsRecord.getRequester())
+                                    .status(requestsRecord.getStatus())
+                                    .event(requestsRecord.getEventId())
+                                    .created(requestsRecord.getCreated())
+                                    .build())
+                            .toList();
 
                     dsl.update(Events.EVENTS)
                             .set(Events.EVENTS.CONFIRMED_REQUESTS, confirmedRequestsInEvent + requestIds.size())
@@ -352,7 +400,14 @@ public class PrivateEventsRepositoryImpl implements EventsRepository {
                             .set(Requests.REQUESTS.STATUS, newStatus.toString())
                             .where(Requests.REQUESTS.ID.in(requestIds))
                             .returning()
-                            .fetchInto(ParticipationRequestDto.class);
+                            .stream().map(requestsRecord -> ParticipationRequestDto.builder()
+                                    .id(requestsRecord.getId())
+                                    .requester(requestsRecord.getRequester())
+                                    .status(requestsRecord.getStatus())
+                                    .event(requestsRecord.getEventId())
+                                    .created(requestsRecord.getCreated())
+                                    .build())
+                            .toList();
 
                     return EventRequestStatusUpdateResult.builder()
                             .rejectedRequests(rejectedStatusList)
@@ -385,12 +440,14 @@ public class PrivateEventsRepositoryImpl implements EventsRepository {
                 .into(UserDto.class);
     }
 
-    private void findUserEvent(Long userId, Long eventId) {
-        dsl.selectFrom(Events.EVENTS)
+    private String findUserEvent(Long userId, Long eventId) {
+        return dsl.select(Events.EVENTS.STATE)
+                .from(Events.EVENTS)
                 .where(Events.EVENTS.ID.eq(eventId))
                 .and(Events.EVENTS.INITIATOR_ID.eq(userId))
                 .fetchOptional()
                 .orElseThrow(() -> new NotFoundException(String.format("Event with id %d not found for user %d",
-                        eventId, userId)));
+                        eventId, userId)))
+                .getValue(Events.EVENTS.STATE);
     }
 }

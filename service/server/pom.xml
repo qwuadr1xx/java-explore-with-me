@@ -93,7 +93,6 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
-
             <plugin>
                 <groupId>org.jooq</groupId>
                 <artifactId>jooq-codegen-maven</artifactId>
@@ -129,7 +128,7 @@
                         </database>
                         <target>
                             <packageName>ru.practicum.explorewithme.jooq</packageName>
-                            <directory>${project.basedir}/src/main/java/ru/practicum/explorewithme/jooq</directory>
+                            <directory>${project.basedir}/src/main/java</directory>
                         </target>
                     </generator>
                 </configuration>

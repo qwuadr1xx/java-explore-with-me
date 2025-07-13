@@ -25,8 +25,8 @@ public class EventsController {
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<EventFullDto> getEvents(@PathVariable("userId") Long userId,
-                                        @RequestParam(required = false) Integer from,
-                                        @RequestParam(required = false) Integer size) {
+                                        @RequestParam(required = false, defaultValue = "0") Integer from,
+                                        @RequestParam(required = false, defaultValue = "10") Integer size) {
         log.info("GET /users/{}/events - Получение событий для userId: {}, from: {}, size: {}", userId, userId, from, size);
         return eventsService.getEvents(userId, from, size);
     }

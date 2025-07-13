@@ -3,10 +3,10 @@ package ru.practicum.explorewithme.admin.users.repository;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
 import org.springframework.stereotype.Repository;
-import ru.practicum.explorewithme.jooq.ru.explorewithme.jooq.tables.CompilationEvents;
-import ru.practicum.explorewithme.jooq.ru.explorewithme.jooq.tables.Events;
-import ru.practicum.explorewithme.jooq.ru.explorewithme.jooq.tables.Requests;
-import ru.practicum.explorewithme.jooq.ru.explorewithme.jooq.tables.Users;
+import ru.practicum.explorewithme.jooq.tables.CompilationEvents;
+import ru.practicum.explorewithme.jooq.tables.Events;
+import ru.practicum.explorewithme.jooq.tables.Requests;
+import ru.practicum.explorewithme.jooq.tables.Users;
 import ru.practicum.explorewithme.users.NewUserRequest;
 import ru.practicum.explorewithme.users.UserDto;
 

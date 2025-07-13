@@ -3,7 +3,7 @@ package ru.practicum.explorewithme.admin.categories.repository;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
 import org.springframework.stereotype.Repository;
-import ru.practicum.explorewithme.jooq.ru.explorewithme.jooq.tables.Categories;
+import ru.practicum.explorewithme.jooq.tables.Categories;
 import ru.practicum.explorewithme.categories.CategoryDto;
 import ru.practicum.explorewithme.categories.NewCategoryDto;
 import ru.practicum.explorewithme.exception.NotFoundException;

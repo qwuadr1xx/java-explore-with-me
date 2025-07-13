@@ -5,14 +5,15 @@ import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.Record;
 import org.springframework.stereotype.Repository;
-import ru.practicum.explorewithme.jooq.ru.explorewithme.jooq.tables.Categories;
-import ru.practicum.explorewithme.jooq.ru.explorewithme.jooq.tables.Events;
+import ru.practicum.explorewithme.client.StatClient;
+import ru.practicum.explorewithme.jooq.tables.Categories;
+import ru.practicum.explorewithme.jooq.tables.Events;
 import ru.practicum.explorewithme.events.EventFullDto;
 import ru.practicum.explorewithme.events.utils.EventState;
 import ru.practicum.explorewithme.events.utils.Sort;
 import ru.practicum.explorewithme.exception.NotFoundException;
-import ru.practicum.explorewithme.jooq.ru.explorewithme.jooq.tables.Locations;
-import ru.practicum.explorewithme.jooq.ru.explorewithme.jooq.tables.Users;
+import ru.practicum.explorewithme.jooq.tables.Locations;
+import ru.practicum.explorewithme.jooq.tables.Users;
 import ru.practicum.explorewithme.utils.RecordToEventMapper;
 
 import java.time.LocalDateTime;
@@ -45,6 +46,7 @@ public class PublicEventsRepositoryImpl implements EventsRepository {
     );
 
     private final DSLContext dsl;
+    private final StatClient statClient;
 
     @Override
     public List<EventFullDto> getEvents(String text, List<Long> categories, Boolean paid,
@@ -58,7 +60,8 @@ public class PublicEventsRepositoryImpl implements EventsRepository {
                 .where(Events.EVENTS.STATE.eq(EventState.PUBLISHED.toString()));
 
         if (text != null) {
-            query = query.and(Events.EVENTS.TITLE.containsIgnoreCase(text));
+            query = query.and(Events.EVENTS.TITLE.containsIgnoreCase(text))
+                    .or(Events.EVENTS.ANNOTATION.containsIgnoreCase(text));
         }
 
         if (categories != null && !categories.isEmpty()) {
@@ -103,7 +106,12 @@ public class PublicEventsRepositoryImpl implements EventsRepository {
                     .limit(size)
                     .fetch();
         }
-
+        if (!recordList.isEmpty()) {
+            recordList.stream().map(r -> r.get(Events.EVENTS.ID)).forEach(id -> dsl.update(Events.EVENTS)
+                    .set(Events.EVENTS.VIEWS, getStats(id).intValue())
+                    .where(Events.EVENTS.ID.eq(id))
+                    .execute());
+        }
         return recordList.stream().map(RecordToEventMapper::map).toList();
     }
 
@@ -115,18 +123,27 @@ public class PublicEventsRepositoryImpl implements EventsRepository {
                 .join(Locations.LOCATIONS).on(Locations.LOCATIONS.ID.eq(Events.EVENTS.LOCATION_ID))
                 .join(Users.USERS).on(Users.USERS.ID.eq(Events.EVENTS.INITIATOR_ID))
                 .where(Events.EVENTS.ID.eq(eventId))
+                .and(Events.EVENTS.STATE.eq(EventState.PUBLISHED.toString()))
                 .fetchOptional()
                 .orElseThrow(() -> new NotFoundException(String.format("Event with id %s does not exist in " +
                         "the database", eventId)));
 
+        dsl.update(Events.EVENTS)
+                .set(Events.EVENTS.VIEWS, getStats(eventId).intValue())
+                .where(Events.EVENTS.ID.eq(eventId))
+                .execute();
+
         return RecordToEventMapper.map(record);
     }
 
-    @Override
-    public void addView(Long eventId) {
-        dsl.update(Events.EVENTS)
-                .set(Events.EVENTS.VIEWS, Events.EVENTS.VIEWS.plus(1))
-                .where(Events.EVENTS.ID.eq(eventId))
-                .execute();
+    private Long getStats(Long eventId) {
+        var statsResponse = statClient.getStats(null, null,
+                List.of("/events/" + eventId.toString()), true);
+
+        if (statsResponse.getBody() == null || statsResponse.getBody().isEmpty()) {
+            throw new NotFoundException(String.format("No stats found for event with id %s", eventId));
+        }
+
+        return statsResponse.getBody().getFirst().getHits();
     }
 }

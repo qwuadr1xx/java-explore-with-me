@@ -1,7 +1,7 @@
 package ru.practicum.explorewithme.admin.events.repository;
 
+import org.jooq.Record2;
 import ru.practicum.explorewithme.events.EventFullDto;
-import ru.practicum.explorewithme.events.EventValidationFields;
 import ru.practicum.explorewithme.events.UpdateEventAdminRequest;
 import ru.practicum.explorewithme.events.utils.EventState;
 
@@ -14,5 +14,5 @@ public interface EventsRepository {
 
     EventFullDto updateEvent(UpdateEventAdminRequest request, Long eventId);
 
-    EventValidationFields getEventsFieldsForValidation(Long eventId);
+    Record2<LocalDateTime, String> getEventsFieldsForValidation(Long eventId);
 }

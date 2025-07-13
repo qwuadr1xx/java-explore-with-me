@@ -31,8 +31,8 @@ public class EventsController {
                                         LocalDateTime rangeStart,
                                         @RequestParam(required = false) @DateTimeFormat(pattern = DATE_TIME_PATTERN)
                                         LocalDateTime rangeEnd,
-                                        @RequestParam(required = false) Integer from,
-                                        @RequestParam(required = false) Integer size) {
+                                        @RequestParam(required = false, defaultValue = "0") Integer from,
+                                        @RequestParam(required = false, defaultValue = "10") Integer size) {
         log.info("GET /admin/events - Получение событий с фильтрами: users={}, states={}, categories={}, " +
                         "rangeStart={}, rangeEnd={}, from={}, size={}",
                 users, states, categories, rangeStart, rangeEnd, from, size);
