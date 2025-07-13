@@ -141,7 +141,7 @@ public class PublicEventsRepositoryImpl implements EventsRepository {
                 List.of("/events/" + eventId.toString()), true);
 
         if (statsResponse.getBody() == null || statsResponse.getBody().isEmpty()) {
-            throw new NotFoundException(String.format("No stats found for event with id %s", eventId));
+            return 0L;
         }
 
         return statsResponse.getBody().getFirst().getHits();
