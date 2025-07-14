@@ -36,14 +36,14 @@ public class PublicEventsServiceImpl implements EventsService {
         }
 
 
-        List<EventFullDto> eventFullDtoList =  eventsRepository.getEvents(text, categories, paid, rangeStart, rangeEnd,
+        List<EventFullDto> eventFullDtoList = eventsRepository.getEvents(text, categories, paid, rangeStart, rangeEnd,
                 onlyAvailable, sort, from, size);
 
         if (eventFullDtoList.isEmpty()) {
             return List.of();
         }
 
-        eventFullDtoList.stream().map(EventFullDto::getId).forEach(id -> updateEventStat(id, ipAddress));
+       updateListEventStat(ipAddress);
 
         return eventFullDtoList;
     }
@@ -60,6 +60,15 @@ public class PublicEventsServiceImpl implements EventsService {
         statClient.saveHit(HitDtoIn.builder()
                 .app("ewm-main-service")
                 .uri("/events/" + eventId)
+                .timestamp(LocalDateTime.now())
+                .ip(ipAddress)
+                .build());
+    }
+
+    private void updateListEventStat(String ipAddress) {
+        statClient.saveHit(HitDtoIn.builder()
+                .app("ewm-main-service")
+                .uri("/events")
                 .timestamp(LocalDateTime.now())
                 .ip(ipAddress)
                 .build());

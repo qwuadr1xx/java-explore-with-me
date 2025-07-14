@@ -137,7 +137,8 @@ public class PublicEventsRepositoryImpl implements EventsRepository {
     }
 
     private Long getStats(Long eventId) {
-        var statsResponse = statClient.getStats(null, null,
+        var statsResponse = statClient.getStats(LocalDateTime.of(1970, 1, 1, 0, 0),
+                LocalDateTime.of(2099, 12, 31, 23, 59),
                 List.of("/events/" + eventId.toString()), true);
 
         if (statsResponse.getBody() == null || statsResponse.getBody().isEmpty()) {

@@ -10,9 +10,9 @@ spring:
 
 logging:
   level:
-    root: TRACE
+    root: DEBUG
   org:
-    jooq: TRACE
+    jooq: DEBUG
 ---
 
 spring:

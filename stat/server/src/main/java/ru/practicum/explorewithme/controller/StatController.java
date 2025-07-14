@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.explorewithme.HitDtoIn;
@@ -21,8 +22,8 @@ public class StatController {
     private static final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
     @GetMapping("/stats")
-    public ResponseEntity<List<ViewStats>> getViewStats(@RequestParam(required = false) @DateTimeFormat(pattern = DATE_TIME_PATTERN) LocalDateTime start,
-                                                        @RequestParam(required = false) @DateTimeFormat(pattern = DATE_TIME_PATTERN) LocalDateTime end,
+    public ResponseEntity<List<ViewStats>> getViewStats(@RequestParam @DateTimeFormat(pattern = DATE_TIME_PATTERN) LocalDateTime start,
+                                                        @RequestParam @DateTimeFormat(pattern = DATE_TIME_PATTERN) LocalDateTime end,
                                                         @RequestParam(required = false) List<String> uris,
                                                         @RequestParam(required = false, defaultValue = "false") Boolean unique) {
         log.info("GET /stats - получение статистики в период с {} по {}", start, end);
@@ -31,6 +32,7 @@ public class StatController {
     }
 
     @PostMapping("/hit")
+    @ResponseStatus(HttpStatus.CREATED)
     public void addHit(@Valid @RequestBody final HitDtoIn hitDtoIn) {
         log.info("POST /hit - создание посещения {}", hitDtoIn);
 

@@ -109,7 +109,6 @@ public class PrivateRequestsRepositoryImpl implements RequestsRepository {
                     .where(Events.EVENTS.ID.eq(eventId))
                     .execute();
 
-
             return dsl.insertInto(Requests.REQUESTS)
                     .set(setMap)
                     .set(Requests.REQUESTS.STATUS, "CONFIRMED")
