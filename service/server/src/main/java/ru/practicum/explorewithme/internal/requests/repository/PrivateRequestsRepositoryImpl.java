@@ -68,6 +68,27 @@ public class PrivateRequestsRepositoryImpl implements RequestsRepository {
                 Requests.REQUESTS.EVENT_ID, eventId
         );
 
+        if (record.get(Events.EVENTS.PARTICIPANT_LIMIT).equals(0)) {
+            dsl.update(Events.EVENTS)
+                    .set(Events.EVENTS.CONFIRMED_REQUESTS, Events.EVENTS.CONFIRMED_REQUESTS.plus(1))
+                    .where(Events.EVENTS.ID.eq(eventId))
+                    .execute();
+
+            return dsl.insertInto(Requests.REQUESTS)
+                    .set(setMap)
+                    .set(Requests.REQUESTS.STATUS, "CONFIRMED")
+                    .returning()
+                    .fetchOptional()
+                    .orElseThrow(() -> new DataAccessException("Something went wrong"))
+                    .map(rec -> new ParticipationRequestDto(
+                            rec.get(Requests.REQUESTS.ID),
+                            rec.get(Requests.REQUESTS.CREATED),
+                            rec.get(Requests.REQUESTS.EVENT_ID),
+                            rec.get(Requests.REQUESTS.REQUESTER),
+                            rec.get(Requests.REQUESTS.STATUS)
+                    ));
+        }
+
         if (record.get(Events.EVENTS.REQUEST_MODERATION)) {
             return dsl.insertInto(Requests.REQUESTS)
                     .set(setMap)
@@ -87,6 +108,7 @@ public class PrivateRequestsRepositoryImpl implements RequestsRepository {
                     .set(Events.EVENTS.CONFIRMED_REQUESTS, Events.EVENTS.CONFIRMED_REQUESTS.plus(1))
                     .where(Events.EVENTS.ID.eq(eventId))
                     .execute();
+
 
             return dsl.insertInto(Requests.REQUESTS)
                     .set(setMap)
