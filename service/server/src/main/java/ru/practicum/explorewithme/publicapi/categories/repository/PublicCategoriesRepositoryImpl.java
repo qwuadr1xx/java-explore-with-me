@@ -17,6 +17,7 @@ public class PublicCategoriesRepositoryImpl implements CategoriesRepository {
     @Override
     public List<CategoryDto> getCategories(Integer from, Integer size) {
         return dsl.selectFrom(Categories.CATEGORIES)
+                .orderBy(Categories.CATEGORIES.ID)
                 .offset(from)
                 .limit(size)
                 .fetchInto(CategoryDto.class);

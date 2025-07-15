@@ -17,20 +17,18 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder(toBuilder = true)
 public class NewEventDto {
-    @NotNull(message = "Field: annotation. Error: must not be blank. Value: null")
-    @NotBlank(message = "Field: annotation. Error: must not be blank. Value: ''")
+    @NotBlank(message = "Field: annotation. Error: must not be blank or null. Value: '' or null")
     @Size(min = 20, max = 2000)
     private String annotation;
 
     @NotNull(message = "Field: category. Error: must not be blank. Value: null")
     private Long category;
 
-    @NotNull(message = "Field: description. Error: must not be blank. Value: null")
-    @NotBlank(message = "Field: description. Error: must not be blank. Value: ''")
+    @NotBlank(message = "Field: description. Error: must not be blank or null. Value: '' or null")
     @Size(min = 20, max = 7000)
     private String description;
 
-    @NotNull(message = "Field: eventDate. Error: must not be blank. Value: null")
+    @NotNull(message = "Field: eventDate. Error: must not be blank or null. Value: '' or null")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventDate;
 
@@ -44,8 +42,7 @@ public class NewEventDto {
 
     private Boolean requestModeration;
 
-    @NotNull(message = "Field: title. Error: must not be blank. Value: null")
-    @NotBlank(message = "Field: title. Error: must not be blank. Value: ''")
+    @NotBlank(message = "Field: title. Error: must not be blank or null. Value: '' or null")
     @Size(min = 3, max = 120)
     private String title;
 }

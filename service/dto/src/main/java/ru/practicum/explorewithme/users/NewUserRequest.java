@@ -2,7 +2,6 @@ package ru.practicum.explorewithme.users;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,13 +13,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder(toBuilder = true)
 public class NewUserRequest {
-    @NotNull(message = "Field: name. Error: must not be blank. Value: null")
-    @NotBlank(message = "Field: name. Error: must not be blank. Value: ''")
+    @NotBlank(message = "Field: name. Error: must not be blank or null. Value: '' or null")
     @Size(min = 2, max = 250)
     private String name;
 
-    @NotNull(message = "Field: email. Error: must not be blank. Value: null")
-    @NotBlank(message = "Field: email. Error: must not be blank. Value: ''")
+    @NotBlank(message = "Field: email. Error: must not be blank or null. Value: '' or null")
     @Size(min = 6, max = 254)
     @Email
     private String email;

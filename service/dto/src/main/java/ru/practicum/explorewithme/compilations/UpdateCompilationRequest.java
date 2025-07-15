@@ -1,4 +1,4 @@
-package ru.practicum.explorewithme.complitations;
+package ru.practicum.explorewithme.compilations;
 
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;

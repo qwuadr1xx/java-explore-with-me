@@ -4,9 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.explorewithme.admin.compilations.repository.CompilationsRepository;
-import ru.practicum.explorewithme.complitations.CompilationDto;
-import ru.practicum.explorewithme.complitations.NewCompilationDto;
-import ru.practicum.explorewithme.complitations.UpdateCompilationRequest;
+import ru.practicum.explorewithme.compilations.CompilationDto;
+import ru.practicum.explorewithme.compilations.NewCompilationDto;
+import ru.practicum.explorewithme.compilations.UpdateCompilationRequest;
 
 @Service
 @RequiredArgsConstructor

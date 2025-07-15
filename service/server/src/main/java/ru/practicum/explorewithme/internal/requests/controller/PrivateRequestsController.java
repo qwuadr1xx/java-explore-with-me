@@ -11,9 +11,9 @@ import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
-@RestController("privateRequestsController")
+@RestController
 @RequestMapping("/users/{userId}/requests")
-public class RequestsController {
+public class PrivateRequestsController {
     private final RequestsService requestsService;
 
     @GetMapping

@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
 import org.springframework.stereotype.Repository;
 import ru.practicum.explorewithme.jooq.Tables;
-import ru.practicum.explorewithme.complitations.CompilationDto;
+import ru.practicum.explorewithme.compilations.CompilationDto;
 import ru.practicum.explorewithme.exception.NotFoundException;
 import ru.practicum.explorewithme.jooq.tables.Compilations;
 import ru.practicum.explorewithme.utils.RecordToShortEventMapper;

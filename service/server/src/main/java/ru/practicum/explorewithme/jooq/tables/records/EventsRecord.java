@@ -233,15 +233,15 @@ public class EventsRecord extends UpdatableRecordImpl<EventsRecord> {
     /**
      * Setter for <code>public.events.views</code>.
      */
-    public void setViews(Integer value) {
+    public void setViews(Long value) {
         set(15, value);
     }
 
     /**
      * Getter for <code>public.events.views</code>.
      */
-    public Integer getViews() {
-        return (Integer) get(15);
+    public Long getViews() {
+        return (Long) get(15);
     }
 
     // -------------------------------------------------------------------------
@@ -267,7 +267,7 @@ public class EventsRecord extends UpdatableRecordImpl<EventsRecord> {
     /**
      * Create a detached, initialised EventsRecord
      */
-    public EventsRecord(Long id, String annotation, Long categoryId, Integer confirmedRequests, LocalDateTime createdOn, String description, LocalDateTime eventDate, Long initiatorId, Long locationId, Boolean paid, Integer participantLimit, LocalDateTime publishedOn, Boolean requestModeration, String state, String title, Integer views) {
+    public EventsRecord(Long id, String annotation, Long categoryId, Integer confirmedRequests, LocalDateTime createdOn, String description, LocalDateTime eventDate, Long initiatorId, Long locationId, Boolean paid, Integer participantLimit, LocalDateTime publishedOn, Boolean requestModeration, String state, String title, Long views) {
         super(Events.EVENTS);
 
         setId(id);

@@ -5,6 +5,7 @@ import org.jooq.*;
 import org.jooq.exception.DataAccessException;
 import org.springframework.stereotype.Repository;
 import ru.practicum.explorewithme.categories.CategoryDto;
+import ru.practicum.explorewithme.events.utils.RequestStatus;
 import ru.practicum.explorewithme.exception.InvalidStateException;
 import ru.practicum.explorewithme.jooq.tables.*;
 import ru.practicum.explorewithme.jooq.tables.records.RequestsRecord;
@@ -87,7 +88,7 @@ public class PrivateEventsRepositoryImpl implements EventsRepository {
                 .set(Events.EVENTS.TITLE, newEventDto.getTitle())
                 .set(Events.EVENTS.CREATED_ON, LocalDateTime.now())
                 .set(Events.EVENTS.LOCATION_ID, locId)
-                .set(Events.EVENTS.STATE, "PENDING");
+                .set(Events.EVENTS.STATE, EventState.PENDING.toString());
 
         if (newEventDto.getPaid() != null) {
             query = query.set(Events.EVENTS.PAID, newEventDto.getPaid());
@@ -244,12 +245,12 @@ public class PrivateEventsRepositoryImpl implements EventsRepository {
             }
 
             List<Long> invalidFirstStatusIds = firstRequestRecords.stream()
-                    .filter(r -> !"PENDING".equals(r.get(Requests.REQUESTS.STATUS)))
+                    .filter(r -> !RequestStatus.PENDING.toString().equals(r.get(Requests.REQUESTS.STATUS)))
                     .map(r -> r.get(Requests.REQUESTS.ID))
                     .toList();
 
             List<Long> invalidLastStatusIds = lastRequestRecords.stream()
-                    .filter(r -> !"PENDING".equals(r.get(Requests.REQUESTS.STATUS)))
+                    .filter(r -> !RequestStatus.PENDING.toString().equals(r.get(Requests.REQUESTS.STATUS)))
                     .map(r -> r.get(Requests.REQUESTS.ID))
                     .toList();
 
@@ -264,7 +265,7 @@ public class PrivateEventsRepositoryImpl implements EventsRepository {
             if (requestModeration) {
                 if (newStatus == EventStatus.CONFIRMED) {
                     List<ParticipationRequestDto> confirmedStatusList = dsl.update(Requests.REQUESTS)
-                            .set(Requests.REQUESTS.STATUS, "CONFIRMED")
+                            .set(Requests.REQUESTS.STATUS, RequestStatus.CONFIRMED.toString())
                             .where(Requests.REQUESTS.ID.in(firstIds))
                             .returning()
                             .stream().map(requestsRecord -> ParticipationRequestDto.builder()
@@ -277,7 +278,7 @@ public class PrivateEventsRepositoryImpl implements EventsRepository {
                             .toList();
 
                     List<ParticipationRequestDto> rejectedStatusList = dsl.update(Requests.REQUESTS)
-                            .set(Requests.REQUESTS.STATUS, "REJECTED")
+                            .set(Requests.REQUESTS.STATUS, RequestStatus.REJECTED.toString())
                             .where(Requests.REQUESTS.ID.in(lastIds))
                             .returning()
                             .stream().map(requestsRecord -> ParticipationRequestDto.builder()
@@ -318,7 +319,7 @@ public class PrivateEventsRepositoryImpl implements EventsRepository {
                 }
             } else {
                 List<ParticipationRequestDto> confirmedStatusList = dsl.update(Requests.REQUESTS)
-                        .set(Requests.REQUESTS.STATUS, "CONFIRMED")
+                        .set(Requests.REQUESTS.STATUS, RequestStatus.CONFIRMED.toString())
                         .where(Requests.REQUESTS.ID.in(firstIds))
                         .returning()
                         .stream().map(requestsRecord -> ParticipationRequestDto.builder()
@@ -331,7 +332,7 @@ public class PrivateEventsRepositoryImpl implements EventsRepository {
                         .toList();
 
                 List<ParticipationRequestDto> rejectedStatusList = dsl.update(Requests.REQUESTS)
-                        .set(Requests.REQUESTS.STATUS, "REJECTED")
+                        .set(Requests.REQUESTS.STATUS, RequestStatus.REJECTED.toString())
                         .where(Requests.REQUESTS.ID.in(lastIds))
                         .returning()
                         .stream().map(requestsRecord -> ParticipationRequestDto.builder()
@@ -363,7 +364,7 @@ public class PrivateEventsRepositoryImpl implements EventsRepository {
             }
 
             List<Long> invalidRequestStatusIds = requestRecords.stream()
-                    .filter(r -> !"PENDING".equals(r.get(Requests.REQUESTS.STATUS)))
+                    .filter(r -> !RequestStatus.PENDING.toString().equals(r.get(Requests.REQUESTS.STATUS)))
                     .map(r -> r.get(Requests.REQUESTS.ID))
                     .toList();
 
@@ -375,7 +376,7 @@ public class PrivateEventsRepositoryImpl implements EventsRepository {
             if (requestModeration) {
                 if (newStatus == EventStatus.CONFIRMED) {
                     List<ParticipationRequestDto> confirmedStatusList = dsl.update(Requests.REQUESTS)
-                            .set(Requests.REQUESTS.STATUS, "CONFIRMED")
+                            .set(Requests.REQUESTS.STATUS, RequestStatus.CONFIRMED.toString())
                             .where(Requests.REQUESTS.ID.in(requestIds))
                             .returning()
                             .stream().map(requestsRecord -> ParticipationRequestDto.builder()
@@ -415,7 +416,7 @@ public class PrivateEventsRepositoryImpl implements EventsRepository {
                 }
             } else {
                 List<ParticipationRequestDto> confirmedStatusList = dsl.update(Requests.REQUESTS)
-                        .set(Requests.REQUESTS.STATUS, "CONFIRMED")
+                        .set(Requests.REQUESTS.STATUS, RequestStatus.CONFIRMED.toString())
                         .where(Requests.REQUESTS.ID.in(requestIds))
                         .returning()
                         .fetchInto(ParticipationRequestDto.class);

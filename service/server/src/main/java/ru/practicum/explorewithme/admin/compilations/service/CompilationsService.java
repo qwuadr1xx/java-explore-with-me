@@ -1,8 +1,8 @@
 package ru.practicum.explorewithme.admin.compilations.service;
 
-import ru.practicum.explorewithme.complitations.CompilationDto;
-import ru.practicum.explorewithme.complitations.NewCompilationDto;
-import ru.practicum.explorewithme.complitations.UpdateCompilationRequest;
+import ru.practicum.explorewithme.compilations.CompilationDto;
+import ru.practicum.explorewithme.compilations.NewCompilationDto;
+import ru.practicum.explorewithme.compilations.UpdateCompilationRequest;
 
 public interface CompilationsService {
     CompilationDto addCompilation(NewCompilationDto newCompilationDto);

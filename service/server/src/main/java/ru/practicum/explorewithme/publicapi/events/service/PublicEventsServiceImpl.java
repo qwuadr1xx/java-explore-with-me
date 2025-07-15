@@ -32,6 +32,8 @@ public class PublicEventsServiceImpl implements EventsService {
         if (rangeEnd != null) {
             if (rangeEnd.isBefore(rangeStart)) {
                 throw new BadRequestException("The end date cannot be before the start date");
+            } else if (rangeEnd.isBefore(LocalDateTime.now().plusDays(2))) {
+                throw new BadRequestException("The end date cannot be in 2 hours from now");
             }
         }
 

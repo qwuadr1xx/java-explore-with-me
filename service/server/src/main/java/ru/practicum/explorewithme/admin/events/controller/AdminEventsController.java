@@ -16,9 +16,9 @@ import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
-@RestController("adminEventsController")
+@RestController
 @RequestMapping("/admin/events")
-public class EventsController {
+public class AdminEventsController {
     private final EventsService eventsService;
     private static final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 

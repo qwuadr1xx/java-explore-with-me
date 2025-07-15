@@ -1,6 +1,6 @@
 package ru.practicum.explorewithme.publicapi.compilations.repository;
 
-import ru.practicum.explorewithme.complitations.CompilationDto;
+import ru.practicum.explorewithme.compilations.CompilationDto;
 
 import java.util.List;
 

@@ -141,7 +141,7 @@ public class Events extends TableImpl<EventsRecord> {
     /**
      * The column <code>public.events.views</code>.
      */
-    public final TableField<EventsRecord, Integer> VIEWS = createField(DSL.name("views"), SQLDataType.INTEGER.defaultValue(DSL.field(DSL.raw("0"), SQLDataType.INTEGER)), this, "");
+    public final TableField<EventsRecord, Long> VIEWS = createField(DSL.name("views"), SQLDataType.BIGINT.defaultValue(DSL.field(DSL.raw("0"), SQLDataType.BIGINT)), this, "");
 
     private Events(Name alias, Table<EventsRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);

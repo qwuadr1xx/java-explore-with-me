@@ -11,9 +11,9 @@ import ru.practicum.explorewithme.categories.NewCategoryDto;
 
 @Slf4j
 @RequiredArgsConstructor
-@RestController("adminCategoriesController")
+@RestController
 @RequestMapping("/admin/categories")
-public class CategoriesController {
+public class AdminCategoriesController {
     private final CategoriesService categoriesService;
 
     @PostMapping

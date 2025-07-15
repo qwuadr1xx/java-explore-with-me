@@ -6,15 +6,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.explorewithme.admin.compilations.service.CompilationsService;
-import ru.practicum.explorewithme.complitations.CompilationDto;
-import ru.practicum.explorewithme.complitations.NewCompilationDto;
-import ru.practicum.explorewithme.complitations.UpdateCompilationRequest;
+import ru.practicum.explorewithme.compilations.CompilationDto;
+import ru.practicum.explorewithme.compilations.NewCompilationDto;
+import ru.practicum.explorewithme.compilations.UpdateCompilationRequest;
 
 @Slf4j
 @RequiredArgsConstructor
-@RestController("adminCompilationsController")
+@RestController
 @RequestMapping("/admin/compilations")
-public class CompilationsController {
+public class AdminCompilationsController {
     private final CompilationsService compilationsService;
 
     @PostMapping

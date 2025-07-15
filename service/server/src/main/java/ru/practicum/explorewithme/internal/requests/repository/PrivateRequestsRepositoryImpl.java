@@ -6,6 +6,8 @@ import org.jooq.Field;
 import org.jooq.Record5;
 import org.jooq.exception.DataAccessException;
 import org.springframework.stereotype.Repository;
+import ru.practicum.explorewithme.events.utils.EventState;
+import ru.practicum.explorewithme.events.utils.RequestStatus;
 import ru.practicum.explorewithme.exception.InvalidStateException;
 import ru.practicum.explorewithme.jooq.tables.Events;
 import ru.practicum.explorewithme.jooq.tables.Requests;
@@ -76,7 +78,7 @@ public class PrivateRequestsRepositoryImpl implements RequestsRepository {
 
             return dsl.insertInto(Requests.REQUESTS)
                     .set(setMap)
-                    .set(Requests.REQUESTS.STATUS, "CONFIRMED")
+                    .set(Requests.REQUESTS.STATUS, RequestStatus.CONFIRMED.toString())
                     .returning()
                     .fetchOptional()
                     .orElseThrow(() -> new DataAccessException("Something went wrong"))
@@ -92,7 +94,7 @@ public class PrivateRequestsRepositoryImpl implements RequestsRepository {
         if (record.get(Events.EVENTS.REQUEST_MODERATION)) {
             return dsl.insertInto(Requests.REQUESTS)
                     .set(setMap)
-                    .set(Requests.REQUESTS.STATUS, "PENDING")
+                    .set(Requests.REQUESTS.STATUS, RequestStatus.PENDING.toString())
                     .returning()
                     .fetchOptional()
                     .orElseThrow(() -> new DataAccessException("Something went wrong"))
@@ -111,7 +113,7 @@ public class PrivateRequestsRepositoryImpl implements RequestsRepository {
 
             return dsl.insertInto(Requests.REQUESTS)
                     .set(setMap)
-                    .set(Requests.REQUESTS.STATUS, "CONFIRMED")
+                    .set(Requests.REQUESTS.STATUS, RequestStatus.CONFIRMED.toString())
                     .returning(Requests.REQUESTS.ID, Requests.REQUESTS.REQUESTER, Requests.REQUESTS.EVENT_ID,
                             Requests.REQUESTS.STATUS, Requests.REQUESTS.CREATED)
                     .fetchOptional()
@@ -129,7 +131,7 @@ public class PrivateRequestsRepositoryImpl implements RequestsRepository {
     @Override
     public ParticipationRequestDto cancelRequest(Long userId, Long requestId) {
         return dsl.update(Requests.REQUESTS)
-                .set(Requests.REQUESTS.STATUS, "CANCELED")
+                .set(Requests.REQUESTS.STATUS, EventState.CANCELED.toString())
                 .where(Requests.REQUESTS.ID.eq(requestId))
                 .and(Requests.REQUESTS.REQUESTER.eq(userId))
                 .returning()

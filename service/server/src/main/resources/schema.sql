@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS events
     request_moderation BOOLEAN                                  DEFAULT true,
     state              VARCHAR(31)                              NOT NULL,
     title              VARCHAR(120)                             NOT NULL,
-    views              INTEGER                                  DEFAULT 0,
+    views              BIGINT                                   DEFAULT 0,
     CONSTRAINT pk_events PRIMARY KEY (id),
     CONSTRAINT fk_events_category   FOREIGN KEY (category_id)  REFERENCES categories(id),
     CONSTRAINT fk_events_initiator  FOREIGN KEY (initiator_id) REFERENCES users(id),

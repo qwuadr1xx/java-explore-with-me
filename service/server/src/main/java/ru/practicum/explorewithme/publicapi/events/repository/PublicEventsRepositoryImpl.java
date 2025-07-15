@@ -108,7 +108,7 @@ public class PublicEventsRepositoryImpl implements EventsRepository {
         }
         if (!recordList.isEmpty()) {
             recordList.stream().map(r -> r.get(Events.EVENTS.ID)).forEach(id -> dsl.update(Events.EVENTS)
-                    .set(Events.EVENTS.VIEWS, getStats(id).intValue())
+                    .set(Events.EVENTS.VIEWS, getStats(id))
                     .where(Events.EVENTS.ID.eq(id))
                     .execute());
         }
@@ -129,7 +129,7 @@ public class PublicEventsRepositoryImpl implements EventsRepository {
                         "the database", eventId)));
 
         dsl.update(Events.EVENTS)
-                .set(Events.EVENTS.VIEWS, getStats(eventId).intValue())
+                .set(Events.EVENTS.VIEWS, getStats(eventId))
                 .where(Events.EVENTS.ID.eq(eventId))
                 .execute();
 
