@@ -3,11 +3,21 @@ services:
     image: postgres:16-alpine
     container_name: stats-db
     environment:
-      POSTGRES_DB: postgres
+      POSTGRES_DB: stat
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 1234
     ports:
       - "5432:5432"
+
+  service-db:
+    image: postgres:16-alpine
+    container_name: service-db
+    environment:
+      POSTGRES_DB: service
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+    ports:
+      - "5433:5432"
 
   stats-server:
     build:
@@ -24,6 +34,11 @@ services:
   ewm-service:
     build:
       context: .
-      dockerfile: service/Dockerfile
+      dockerfile: service/server/Dockerfile
+    container_name: ewm-service
+    depends_on:
+      - service-db
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
     ports:
       - "8080:8080"

@@ -60,7 +60,7 @@ class StatControllerTest {
         mockMvc.perform(post(BASE_HIT)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(dto)))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
     }
 
     @Test
