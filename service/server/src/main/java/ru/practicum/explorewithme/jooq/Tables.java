@@ -5,6 +5,7 @@ package ru.practicum.explorewithme.jooq;
 
 
 import ru.practicum.explorewithme.jooq.tables.Categories;
+import ru.practicum.explorewithme.jooq.tables.Comments;
 import ru.practicum.explorewithme.jooq.tables.CompilationEvents;
 import ru.practicum.explorewithme.jooq.tables.Compilations;
 import ru.practicum.explorewithme.jooq.tables.Databasechangelog;
@@ -25,6 +26,11 @@ public class Tables {
      * The table <code>public.categories</code>.
      */
     public static final Categories CATEGORIES = Categories.CATEGORIES;
+
+    /**
+     * The table <code>public.comments</code>.
+     */
+    public static final Comments COMMENTS = Comments.COMMENTS;
 
     /**
      * The table <code>public.compilation_events</code>.

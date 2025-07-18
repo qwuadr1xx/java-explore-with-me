@@ -7,6 +7,8 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.explorewithme.admin.events.service.EventsService;
+import ru.practicum.explorewithme.comments.CommentDto;
+import ru.practicum.explorewithme.comments.util.CommentStatus;
 import ru.practicum.explorewithme.events.EventFullDto;
 import ru.practicum.explorewithme.events.UpdateEventAdminRequest;
 import ru.practicum.explorewithme.events.utils.EventState;
@@ -45,5 +47,25 @@ public class AdminEventsController {
                                     @PathVariable Long eventId) {
         log.info("PATCH /admin/events/{} - Обновление события с запросом: {}", eventId, request);
         return eventsService.updateEvent(request, eventId);
+    }
+
+    @GetMapping("/comments")
+    @ResponseStatus(HttpStatus.OK)
+    public List<CommentDto> getComments(@RequestParam(required = false) List<Long> events,
+                                        @RequestParam(required = false) List<Long> users,
+                                        @RequestParam(required = false) CommentStatus status,
+                                        @RequestParam(required = false, defaultValue = "0") Integer from,
+                                        @RequestParam(required = false, defaultValue = "10") Integer size) {
+        log.info("GET /admin/events/comments - Получение комментариев с фильтрами: events={}, users={}, status={}, from={}, size={}",
+                events, users, status, from, size);
+        return eventsService.getComments(events, users, status, from, size);
+    }
+
+    @PatchMapping("/comments/{comId}")
+    @ResponseStatus(HttpStatus.OK)
+    public CommentDto updateComment(@PathVariable Long comId,
+                                    @RequestParam CommentStatus status) {
+        log.info("PATCH /admin/events/comments/{} - Изменение статуса комментария на {}", comId, status);
+        return eventsService.updateComment(comId, status);
     }
 }

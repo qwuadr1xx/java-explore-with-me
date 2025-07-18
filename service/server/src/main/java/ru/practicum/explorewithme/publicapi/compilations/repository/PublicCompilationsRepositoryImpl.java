@@ -2,17 +2,24 @@ package ru.practicum.explorewithme.publicapi.compilations.repository;
 
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
+import org.jooq.Field;
 import org.springframework.stereotype.Repository;
+import ru.practicum.explorewithme.comments.CommentDtoShort;
+import ru.practicum.explorewithme.comments.util.CommentStatus;
+import ru.practicum.explorewithme.events.EventShortDto;
 import ru.practicum.explorewithme.jooq.Tables;
 import ru.practicum.explorewithme.compilations.CompilationDto;
 import ru.practicum.explorewithme.exception.NotFoundException;
 import ru.practicum.explorewithme.jooq.tables.Compilations;
+import ru.practicum.explorewithme.jooq.tables.Events;
+import ru.practicum.explorewithme.utils.RecordToShortCommentMapper;
 import ru.practicum.explorewithme.utils.RecordToShortEventMapper;
 
 import java.util.List;
 import java.util.Optional;
 
 import static org.jooq.impl.DSL.*;
+import static ru.practicum.explorewithme.jooq.Tables.COMMENTS;
 import static ru.practicum.explorewithme.jooq.tables.Categories.CATEGORIES;
 import static ru.practicum.explorewithme.jooq.tables.CompilationEvents.COMPILATION_EVENTS;
 import static ru.practicum.explorewithme.jooq.tables.Compilations.COMPILATIONS;
@@ -39,7 +46,8 @@ public class PublicCompilationsRepositoryImpl implements CompilationsRepository 
                         CATEGORIES.ID,
                         CATEGORIES.NAME,
                         USERS.ID,
-                        USERS.NAME
+                        USERS.NAME,
+                        buildCommentsMultisetField()
                 )
                         .from(COMPILATION_EVENTS)
                         .join(EVENTS)
@@ -66,7 +74,11 @@ public class PublicCompilationsRepositoryImpl implements CompilationsRepository 
                         .id(it.get(Tables.COMPILATIONS.ID))
                         .title(it.get(Tables.COMPILATIONS.TITLE))
                         .pinned(it.get(Tables.COMPILATIONS.PINNED))
-                        .events(it.get(multisetField).map(RecordToShortEventMapper::map))
+                        .events(it.get(multisetField).map(event -> {
+                            EventShortDto eventShort = RecordToShortEventMapper.map(event);
+                            eventShort.setComments(event.get(buildCommentsMultisetField()));
+                            return eventShort;
+                        }))
                         .build());
     }
 
@@ -85,7 +97,8 @@ public class PublicCompilationsRepositoryImpl implements CompilationsRepository 
                         CATEGORIES.ID,
                         CATEGORIES.NAME,
                         USERS.ID,
-                        USERS.NAME
+                        USERS.NAME,
+                        buildCommentsMultisetField()
                 ).from(COMPILATION_EVENTS)
                         .join(EVENTS)
                         .on(EVENTS.ID.eq(COMPILATION_EVENTS.EVENT_ID))
@@ -108,9 +121,30 @@ public class PublicCompilationsRepositoryImpl implements CompilationsRepository 
                         .id(it.get(Tables.COMPILATIONS.ID))
                         .title(it.get(Tables.COMPILATIONS.TITLE))
                         .pinned(it.get(Tables.COMPILATIONS.PINNED))
-                        .events(it.get(multisetField).map(RecordToShortEventMapper::map))
+                        .events(it.get(multisetField).map(event -> {
+                            EventShortDto eventShort = RecordToShortEventMapper.map(event);
+                            eventShort.setComments(event.get(buildCommentsMultisetField()));
+                            return eventShort;
+                        }))
                         .build())
                 .orElseThrow(() -> new NotFoundException(String.format("Compilation with id %s does not exist.",
                         compId)));
+    }
+
+    private Field<List<CommentDtoShort>> buildCommentsMultisetField() {
+        return multiset(
+                select(
+                        COMMENTS.ID,
+                        COMMENTS.CONTENT,
+                        COMMENTS.CREATED,
+                        Tables.USERS.ID,
+                        Tables.USERS.NAME
+                )
+                        .from(COMMENTS)
+                        .join(Tables.USERS).on(Tables.USERS.ID.eq(COMMENTS.AUTHOR_ID))
+                        .where(COMMENTS.EVENT_ID.eq(Events.EVENTS.ID))
+                        .and(COMMENTS.STATUS.eq(CommentStatus.APPROVED.toString()))
+        ).convertFrom(r -> r.map(RecordToShortCommentMapper::map))
+                .as("comments");
     }
 }

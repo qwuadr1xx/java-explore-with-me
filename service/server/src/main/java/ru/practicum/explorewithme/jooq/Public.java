@@ -12,6 +12,7 @@ import org.jooq.Table;
 import org.jooq.impl.SchemaImpl;
 
 import ru.practicum.explorewithme.jooq.tables.Categories;
+import ru.practicum.explorewithme.jooq.tables.Comments;
 import ru.practicum.explorewithme.jooq.tables.CompilationEvents;
 import ru.practicum.explorewithme.jooq.tables.Compilations;
 import ru.practicum.explorewithme.jooq.tables.Databasechangelog;
@@ -39,6 +40,11 @@ public class Public extends SchemaImpl {
      * The table <code>public.categories</code>.
      */
     public final Categories CATEGORIES = Categories.CATEGORIES;
+
+    /**
+     * The table <code>public.comments</code>.
+     */
+    public final Comments COMMENTS = Comments.COMMENTS;
 
     /**
      * The table <code>public.compilation_events</code>.
@@ -97,6 +103,7 @@ public class Public extends SchemaImpl {
     public final List<Table<?>> getTables() {
         return Arrays.asList(
             Categories.CATEGORIES,
+            Comments.COMMENTS,
             CompilationEvents.COMPILATION_EVENTS,
             Compilations.COMPILATIONS,
             Databasechangelog.DATABASECHANGELOG,
