@@ -6,7 +6,7 @@ import ru.practicum.explorewithme.comments.util.UpdateCommentStatus;
 import ru.practicum.explorewithme.exception.InvalidStateException;
 
 @Component
-public class StringToUpdateCommentStatusConverter implements Converter<String, UpdateCommentStatus>{
+public class StringToUpdateCommentStatusConverter implements Converter<String, UpdateCommentStatus> {
     @Override
     public UpdateCommentStatus convert(String source) {
         try {
