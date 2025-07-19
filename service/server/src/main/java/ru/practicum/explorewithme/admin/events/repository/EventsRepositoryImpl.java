@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 import ru.practicum.explorewithme.comments.CommentDto;
 import ru.practicum.explorewithme.comments.CommentDtoShort;
 import ru.practicum.explorewithme.comments.util.CommentStatus;
+import ru.practicum.explorewithme.comments.util.UpdateCommentStatus;
 import ru.practicum.explorewithme.exception.BadRequestException;
 import ru.practicum.explorewithme.jooq.tables.Categories;
 import ru.practicum.explorewithme.jooq.tables.Events;
@@ -205,7 +206,7 @@ public class EventsRepositoryImpl implements EventsRepository {
     }
 
     @Override
-    public CommentDto updateComment(Long comId, CommentStatus status) {
+    public CommentDto updateComment(Long comId, UpdateCommentStatus status) {
         CommentStatus commentStatus = dsl.select(COMMENTS.STATUS)
                 .from(COMMENTS)
                 .where(COMMENTS.ID.eq(comId))
@@ -219,7 +220,7 @@ public class EventsRepositoryImpl implements EventsRepository {
         }
 
         dsl.update(COMMENTS)
-                .set(COMMENTS.STATUS, status.toString())
+                .set(COMMENTS.STATUS, status == UpdateCommentStatus.APPROVE ? CommentStatus.APPROVED.toString() : CommentStatus.REJECTED.toString())
                 .where(COMMENTS.ID.eq(comId))
                 .execute();
 

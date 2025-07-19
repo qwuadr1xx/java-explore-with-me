@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import ru.practicum.explorewithme.comments.CommentDto;
 import ru.practicum.explorewithme.comments.NewCommentDto;
 import ru.practicum.explorewithme.comments.util.CommentStatus;
+import ru.practicum.explorewithme.exception.InvalidCommentStatusException;
 import ru.practicum.explorewithme.exception.NotFoundException;
 import ru.practicum.explorewithme.jooq.tables.Events;
 import ru.practicum.explorewithme.utils.RecordToCommentMapper;
@@ -82,7 +83,7 @@ public class PrivateCommentsRepositoryImpl implements CommentsRepository {
         return dsl.select(COMMENT_FIELDS)
                 .from(COMMENTS)
                 .join(USERS).on(USERS.ID.eq(COMMENTS.AUTHOR_ID))
-                .and(COMMENTS.AUTHOR_ID.eq(userId))
+                .where(COMMENTS.AUTHOR_ID.eq(userId))
                 .and(COMMENTS.STATUS.eq(status.toString()))
                 .offset(from)
                 .limit(size)
@@ -98,7 +99,7 @@ public class PrivateCommentsRepositoryImpl implements CommentsRepository {
                 .and(COMMENTS.AUTHOR_ID.eq(userId))
                 .and(COMMENTS.STATUS.eq(CommentStatus.PENDING.toString()))
                 .execute() == 0) {
-            throw new DataAccessException("Comment was not updated");
+            throw new InvalidCommentStatusException("Comment was not updated");
         }
 
         return dsl.select(COMMENT_FIELDS)

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.explorewithme.admin.events.service.EventsService;
 import ru.practicum.explorewithme.comments.CommentDto;
 import ru.practicum.explorewithme.comments.util.CommentStatus;
+import ru.practicum.explorewithme.comments.util.UpdateCommentStatus;
 import ru.practicum.explorewithme.events.EventFullDto;
 import ru.practicum.explorewithme.events.UpdateEventAdminRequest;
 import ru.practicum.explorewithme.events.utils.EventState;
@@ -64,7 +65,7 @@ public class AdminEventsController {
     @PatchMapping("/comments/{comId}")
     @ResponseStatus(HttpStatus.OK)
     public CommentDto updateComment(@PathVariable Long comId,
-                                    @RequestParam CommentStatus status) {
+                                    @RequestParam UpdateCommentStatus status) {
         log.info("PATCH /admin/events/comments/{} - Изменение статуса комментария на {}", comId, status);
         return eventsService.updateComment(comId, status);
     }

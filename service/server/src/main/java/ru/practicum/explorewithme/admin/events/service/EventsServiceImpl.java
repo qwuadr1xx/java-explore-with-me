@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.explorewithme.admin.events.repository.EventsRepository;
 import ru.practicum.explorewithme.comments.CommentDto;
 import ru.practicum.explorewithme.comments.util.CommentStatus;
+import ru.practicum.explorewithme.comments.util.UpdateCommentStatus;
 import ru.practicum.explorewithme.events.EventFullDto;
 import ru.practicum.explorewithme.events.UpdateEventAdminRequest;
 import ru.practicum.explorewithme.events.utils.EventState;
@@ -41,7 +42,7 @@ public class EventsServiceImpl implements EventsService {
     }
 
     @Override
-    public CommentDto updateComment(Long comId, CommentStatus status) {
+    public CommentDto updateComment(Long comId, UpdateCommentStatus status) {
         return eventsRepository.updateComment(comId, status);
     }
 

@@ -72,7 +72,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ApiError handleIllegalArgumentException(IllegalArgumentException e) {
-        e.printStackTrace();
         return ApiError.builder()
                 .message(e.getMessage())
                 .reason("Illegal argument.")
@@ -117,6 +116,16 @@ public class GlobalExceptionHandler {
         };
     }
 
+    @ExceptionHandler(InvalidCommentStatusException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiError handleInvalidCommentStatusException(InvalidCommentStatusException e) {
+        return ApiError.builder()
+                .message(e.getMessage())
+                .reason("Invalid comment status.")
+                .status("CONFLICT")
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
