@@ -1,0 +1,111 @@
+{
+  "info": {
+    "name": "ExploreWithMe Sequential Comment Tests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "explorewithme-seq-comments-002"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "localhost:8080" },
+    { "key": "userId", "value": "" },
+    { "key": "categoryId", "value": "" },
+    { "key": "eventId", "value": "" },
+    { "key": "commentId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Create User",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": {
+          "host": ["{{baseUrl}}"],
+          "path": ["admin","users"]
+        },
+        "body": { "mode": "raw", "raw": "{ \"name\": \"Test User\", \"email\": \"testuser@example.com\" }" }
+      },
+      "event": [{
+        "listen": "test",
+        "script": { "exec": [
+          "pm.test('User created (201)', () => pm.response.to.have.status(201));",
+          "const u = pm.response.json();",
+          "pm.expect(u).to.include.keys('id','name','email');",
+          "pm.environment.set('userId', u.id.toString());"
+        ] }
+      }]
+    },
+    {
+      "name": "2. Create Category",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": {
+          "host": ["{{baseUrl}}"],
+          "path": ["admin","categories"]
+        },
+        "body": { "mode": "raw", "raw": "{ \"name\": \"TestCategory123\" }" }
+      },
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('Category created (201)', () => pm.response.to.have.status(201));",
+        "const c = pm.response.json();",
+        "pm.expect(c).to.include.keys('id','name');",
+        "pm.environment.set('categoryId', c.id.toString());"
+      ] } }]
+    },
+    {
+      "name": "3. Create Event",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": {
+          "host": ["{{baseUrl}}"],
+          "path": ["users","{{userId}}","events"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"annotation\": \"Test event annotation\",\n  \"category\": {{categoryId}},\n  \"description\": \"Detailed description\",\n  \"eventDate\": \"2025-08-01 12:00:00\",\n  \"location\": { \"lat\": 10.0, \"lon\": 20.0 },\n  \"paid\": false,\n  \"participantLimit\": 100,\n  \"requestModeration\": true,\n  \"title\": \"Test Event Title\"\n}"
+        }
+      },
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('Event created (201)', () => pm.response.to.have.status(201));",
+        "const e = pm.response.json();",
+        "pm.expect(e).to.include.keys('id','annotation','title','category');",
+        "pm.environment.set('eventId', e.id.toString());"
+      ] } }]
+    },
+    {
+      "name": "4. Create Comment",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": {
+          "host": ["{{baseUrl}}"],
+          "path": ["users","{{userId}}","events","{{eventId}}","comments"]
+        },
+        "body": { "mode": "raw", "raw": "{ \"content\": \"Sequential test comment\" }" }
+      },
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('Comment created (201)', () => pm.response.to.have.status(201));",
+        "const c = pm.response.json();",
+        "pm.expect(c).to.include.keys('id','content','status','eventId');",
+        "pm.expect(c.status).to.eql('PENDING');",
+        "pm.environment.set('commentId', c.id.toString());"
+      ] } }]
+    },
+    {
+      "name": "5. Get Comments",
+      "request": {
+        "method": "GET",
+        "url": {
+          "host": ["{{baseUrl}}"],
+          "path": ["users","{{userId}}","events","{{eventId}}","comments"],
+          "query": [ { "key": "status", "value": "PENDING" } ]
+        }
+      },
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('Comments fetched (200)', () => pm.response.to.have.status(200));",
+        "const arr = pm.response.json();",
+        "pm.test('Sequential comment present', () => pm.expect(arr.some(x => x.id === +pm.environment.get('commentId'))).to.be.true);"
+      ] } }]
+    }
+  ]
+}

@@ -34,6 +34,7 @@ import org.jooq.impl.TableImpl;
 import ru.practicum.explorewithme.jooq.Keys;
 import ru.practicum.explorewithme.jooq.Public;
 import ru.practicum.explorewithme.jooq.tables.Categories.CategoriesPath;
+import ru.practicum.explorewithme.jooq.tables.Comments.CommentsPath;
 import ru.practicum.explorewithme.jooq.tables.CompilationEvents.CompilationEventsPath;
 import ru.practicum.explorewithme.jooq.tables.Compilations.CompilationsPath;
 import ru.practicum.explorewithme.jooq.tables.Locations.LocationsPath;
@@ -259,6 +260,19 @@ public class Events extends TableImpl<EventsRecord> {
             _locations = new LocationsPath(this, Keys.EVENTS__FK_EVENTS_LOCATION, null);
 
         return _locations;
+    }
+
+    private transient CommentsPath _comments;
+
+    /**
+     * Get the implicit to-many join path to the <code>public.comments</code>
+     * table
+     */
+    public CommentsPath comments() {
+        if (_comments == null)
+            _comments = new CommentsPath(this, null, Keys.COMMENTS__FK_COMMENTS_EVENT.getInverseKey());
+
+        return _comments;
     }
 
     private transient CompilationEventsPath _compilationEvents;

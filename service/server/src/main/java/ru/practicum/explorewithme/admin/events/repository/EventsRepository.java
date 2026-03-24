@@ -1,6 +1,9 @@
 package ru.practicum.explorewithme.admin.events.repository;
 
 import org.jooq.Record2;
+import ru.practicum.explorewithme.comments.CommentDto;
+import ru.practicum.explorewithme.comments.util.CommentStatus;
+import ru.practicum.explorewithme.comments.util.UpdateCommentStatus;
 import ru.practicum.explorewithme.events.EventFullDto;
 import ru.practicum.explorewithme.events.UpdateEventAdminRequest;
 import ru.practicum.explorewithme.events.utils.EventState;
@@ -15,4 +18,8 @@ public interface EventsRepository {
     EventFullDto updateEvent(UpdateEventAdminRequest request, Long eventId);
 
     Record2<LocalDateTime, String> getEventsFieldsForValidation(Long eventId);
+
+    List<CommentDto> getComments(List<Long> events, List<Long> users, CommentStatus status, Integer from, Integer size);
+
+    CommentDto updateComment(Long comId, UpdateCommentStatus status);
 }

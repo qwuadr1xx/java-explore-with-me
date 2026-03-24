@@ -5,6 +5,8 @@ import org.jooq.*;
 import org.jooq.exception.DataAccessException;
 import org.springframework.stereotype.Repository;
 import ru.practicum.explorewithme.categories.CategoryDto;
+import ru.practicum.explorewithme.comments.CommentDtoShort;
+import ru.practicum.explorewithme.comments.util.CommentStatus;
 import ru.practicum.explorewithme.events.utils.RequestStatus;
 import ru.practicum.explorewithme.exception.InvalidStateException;
 import ru.practicum.explorewithme.jooq.tables.*;
@@ -23,9 +25,15 @@ import ru.practicum.explorewithme.requests.ParticipationRequestDto;
 import ru.practicum.explorewithme.users.UserDto;
 import ru.practicum.explorewithme.users.UserShortDto;
 import ru.practicum.explorewithme.utils.RecordToEventMapper;
+import ru.practicum.explorewithme.utils.RecordToShortCommentMapper;
 
 import java.time.LocalDateTime;
 import java.util.*;
+
+import static org.jooq.impl.DSL.multiset;
+import static org.jooq.impl.DSL.select;
+import static ru.practicum.explorewithme.jooq.Tables.COMMENTS;
+import static ru.practicum.explorewithme.jooq.Tables.USERS;
 
 @Repository
 @RequiredArgsConstructor
@@ -55,7 +63,12 @@ public class PrivateEventsRepositoryImpl implements EventsRepository {
 
     @Override
     public List<EventFullDto> getEvents(Long userId, Integer from, Integer size) {
-        return dsl.select(SELECT_FIELDS)
+        Field<List<CommentDtoShort>> comments = buildCommentsMultisetField();
+        List<SelectFieldOrAsterisk> fields = new ArrayList<>(SELECT_FIELDS);
+        fields.add(comments);
+
+
+        return dsl.select(fields)
                 .from(Events.EVENTS)
                 .join(Categories.CATEGORIES).on(Categories.CATEGORIES.ID.eq(Events.EVENTS.CATEGORY_ID))
                 .join(Locations.LOCATIONS).on(Locations.LOCATIONS.ID.eq(Events.EVENTS.LOCATION_ID))
@@ -63,8 +76,11 @@ public class PrivateEventsRepositoryImpl implements EventsRepository {
                 .where(Events.EVENTS.INITIATOR_ID.eq(userId))
                 .offset(from)
                 .limit(size)
-                .fetch()
-                .stream().map(RecordToEventMapper::map).toList();
+                .fetch(it -> {
+                    EventFullDto event = RecordToEventMapper.map(it);
+                    event.setComments(it.get(comments));
+                    return event;
+                });
     }
 
     @Override
@@ -107,25 +123,33 @@ public class PrivateEventsRepositoryImpl implements EventsRepository {
                 .into(EventFullDto.class).toBuilder()
                 .location(newEventDto.getLocation())
                 .category(dsl.select(Categories.CATEGORIES.ID, Categories.CATEGORIES.NAME)
-                                .from(Categories.CATEGORIES)
-                                .where(Categories.CATEGORIES.ID.eq(newEventDto.getCategory()))
-                                .fetchOneInto(CategoryDto.class))
+                        .from(Categories.CATEGORIES)
+                        .where(Categories.CATEGORIES.ID.eq(newEventDto.getCategory()))
+                        .fetchOneInto(CategoryDto.class))
                 .initiator(new UserShortDto(user.getId(), user.getName()))
                 .build();
     }
 
     @Override
     public EventFullDto getEventById(Long userId, Long eventId) {
-        return RecordToEventMapper.map(dsl.select(SELECT_FIELDS)
+        Field<List<CommentDtoShort>> comments = buildCommentsMultisetField();
+        List<SelectFieldOrAsterisk> fields = new ArrayList<>(SELECT_FIELDS);
+        fields.add(comments);
+
+        return dsl.select(fields)
                 .from(Events.EVENTS)
                 .join(Categories.CATEGORIES).on(Categories.CATEGORIES.ID.eq(Events.EVENTS.CATEGORY_ID))
                 .join(Locations.LOCATIONS).on(Locations.LOCATIONS.ID.eq(Events.EVENTS.LOCATION_ID))
                 .join(Users.USERS).on(Users.USERS.ID.eq(Events.EVENTS.INITIATOR_ID))
                 .where(Events.EVENTS.INITIATOR_ID.eq(userId))
                 .and(Events.EVENTS.ID.eq(eventId))
-                .fetchOptional()
+                .fetchOptional(it -> {
+                    EventFullDto event = RecordToEventMapper.map(it);
+                    event.setComments(it.get(comments));
+                    return event;
+                })
                 .orElseThrow(() -> new NotFoundException(String.format("Event with id %d not found for user %d",
-                        eventId, userId))));
+                        eventId, userId)));
     }
 
     @Override
@@ -172,15 +196,24 @@ public class PrivateEventsRepositoryImpl implements EventsRepository {
                 .where(Events.EVENTS.ID.eq(eventId))
                 .execute();
 
-        return RecordToEventMapper.map(dsl.select(SELECT_FIELDS)
+        Field<List<CommentDtoShort>> comments = buildCommentsMultisetField();
+        List<SelectFieldOrAsterisk> fields = new ArrayList<>(SELECT_FIELDS);
+        fields.add(comments);
+
+        return dsl.select(fields)
                 .from(Events.EVENTS)
                 .join(Categories.CATEGORIES).on(Categories.CATEGORIES.ID.eq(Events.EVENTS.CATEGORY_ID))
                 .join(Locations.LOCATIONS).on(Locations.LOCATIONS.ID.eq(Events.EVENTS.LOCATION_ID))
                 .join(Users.USERS).on(Users.USERS.ID.eq(Events.EVENTS.INITIATOR_ID))
                 .where(Events.EVENTS.INITIATOR_ID.eq(userId))
-                .fetchOptional()
+                .and(Events.EVENTS.ID.eq(eventId))
+                .fetchOptional(it -> {
+                    EventFullDto event = RecordToEventMapper.map(it);
+                    event.setComments(it.get(comments));
+                    return event;
+                })
                 .orElseThrow(() -> new NotFoundException(String.format("Event with id %d not found for user %d",
-                        eventId, userId))));
+                        eventId, userId)));
     }
 
     @Override
@@ -450,5 +483,21 @@ public class PrivateEventsRepositoryImpl implements EventsRepository {
                 .orElseThrow(() -> new NotFoundException(String.format("Event with id %d not found for user %d",
                         eventId, userId)))
                 .getValue(Events.EVENTS.STATE);
+    }
+
+    private Field<List<CommentDtoShort>> buildCommentsMultisetField() {
+        return multiset(
+                select(
+                        COMMENTS.ID,
+                        COMMENTS.CONTENT,
+                        COMMENTS.CREATED,
+                        USERS.ID,
+                        USERS.NAME
+                )
+                        .from(COMMENTS)
+                        .join(USERS).on(USERS.ID.eq(COMMENTS.AUTHOR_ID))
+                        .where(COMMENTS.EVENT_ID.eq(Events.EVENTS.ID))
+                        .and(COMMENTS.STATUS.eq(CommentStatus.APPROVED.toString()))
+        ).convertFrom(r -> r.map(RecordToShortCommentMapper::map));
     }
 }

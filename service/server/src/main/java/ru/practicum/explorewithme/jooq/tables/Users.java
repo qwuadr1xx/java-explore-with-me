@@ -32,6 +32,7 @@ import org.jooq.impl.TableImpl;
 
 import ru.practicum.explorewithme.jooq.Keys;
 import ru.practicum.explorewithme.jooq.Public;
+import ru.practicum.explorewithme.jooq.tables.Comments.CommentsPath;
 import ru.practicum.explorewithme.jooq.tables.Events.EventsPath;
 import ru.practicum.explorewithme.jooq.tables.Requests.RequestsPath;
 import ru.practicum.explorewithme.jooq.tables.records.UsersRecord;
@@ -153,6 +154,19 @@ public class Users extends TableImpl<UsersRecord> {
     @Override
     public List<UniqueKey<UsersRecord>> getUniqueKeys() {
         return Arrays.asList(Keys.UQ_USERS_EMAIL);
+    }
+
+    private transient CommentsPath _comments;
+
+    /**
+     * Get the implicit to-many join path to the <code>public.comments</code>
+     * table
+     */
+    public CommentsPath comments() {
+        if (_comments == null)
+            _comments = new CommentsPath(this, null, Keys.COMMENTS__FK_COMMENTS_AUTHOR.getInverseKey());
+
+        return _comments;
     }
 
     private transient EventsPath _events;

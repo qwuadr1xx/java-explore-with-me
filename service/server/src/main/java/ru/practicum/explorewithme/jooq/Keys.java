@@ -11,6 +11,7 @@ import org.jooq.impl.DSL;
 import org.jooq.impl.Internal;
 
 import ru.practicum.explorewithme.jooq.tables.Categories;
+import ru.practicum.explorewithme.jooq.tables.Comments;
 import ru.practicum.explorewithme.jooq.tables.CompilationEvents;
 import ru.practicum.explorewithme.jooq.tables.Compilations;
 import ru.practicum.explorewithme.jooq.tables.Databasechangeloglock;
@@ -19,6 +20,7 @@ import ru.practicum.explorewithme.jooq.tables.Locations;
 import ru.practicum.explorewithme.jooq.tables.Requests;
 import ru.practicum.explorewithme.jooq.tables.Users;
 import ru.practicum.explorewithme.jooq.tables.records.CategoriesRecord;
+import ru.practicum.explorewithme.jooq.tables.records.CommentsRecord;
 import ru.practicum.explorewithme.jooq.tables.records.CompilationEventsRecord;
 import ru.practicum.explorewithme.jooq.tables.records.CompilationsRecord;
 import ru.practicum.explorewithme.jooq.tables.records.DatabasechangeloglockRecord;
@@ -41,6 +43,7 @@ public class Keys {
 
     public static final UniqueKey<CategoriesRecord> PK_CATEGORIES = Internal.createUniqueKey(Categories.CATEGORIES, DSL.name("pk_categories"), new TableField[] { Categories.CATEGORIES.ID }, true);
     public static final UniqueKey<CategoriesRecord> UQ_CATEGORIES_NAME = Internal.createUniqueKey(Categories.CATEGORIES, DSL.name("uq_categories_name"), new TableField[] { Categories.CATEGORIES.NAME }, true);
+    public static final UniqueKey<CommentsRecord> PK_COMMENTS = Internal.createUniqueKey(Comments.COMMENTS, DSL.name("pk_comments"), new TableField[] { Comments.COMMENTS.ID }, true);
     public static final UniqueKey<CompilationEventsRecord> PK_COMPILATION_EVENTS = Internal.createUniqueKey(CompilationEvents.COMPILATION_EVENTS, DSL.name("pk_compilation_events"), new TableField[] { CompilationEvents.COMPILATION_EVENTS.COMPILATION_ID, CompilationEvents.COMPILATION_EVENTS.EVENT_ID }, true);
     public static final UniqueKey<CompilationsRecord> PK_COMPILATIONS = Internal.createUniqueKey(Compilations.COMPILATIONS, DSL.name("pk_compilations"), new TableField[] { Compilations.COMPILATIONS.ID }, true);
     public static final UniqueKey<CompilationsRecord> UQ_COMPILATIONS_TITLE = Internal.createUniqueKey(Compilations.COMPILATIONS, DSL.name("uq_compilations_title"), new TableField[] { Compilations.COMPILATIONS.TITLE }, true);
@@ -55,6 +58,8 @@ public class Keys {
     // FOREIGN KEY definitions
     // -------------------------------------------------------------------------
 
+    public static final ForeignKey<CommentsRecord, UsersRecord> COMMENTS__FK_COMMENTS_AUTHOR = Internal.createForeignKey(Comments.COMMENTS, DSL.name("fk_comments_author"), new TableField[] { Comments.COMMENTS.AUTHOR_ID }, Keys.PK_USERS, new TableField[] { Users.USERS.ID }, true);
+    public static final ForeignKey<CommentsRecord, EventsRecord> COMMENTS__FK_COMMENTS_EVENT = Internal.createForeignKey(Comments.COMMENTS, DSL.name("fk_comments_event"), new TableField[] { Comments.COMMENTS.EVENT_ID }, Keys.PK_EVENTS, new TableField[] { Events.EVENTS.ID }, true);
     public static final ForeignKey<CompilationEventsRecord, CompilationsRecord> COMPILATION_EVENTS__FK_COMPILATION_EVENTS_COMPILATION = Internal.createForeignKey(CompilationEvents.COMPILATION_EVENTS, DSL.name("fk_compilation_events_compilation"), new TableField[] { CompilationEvents.COMPILATION_EVENTS.COMPILATION_ID }, Keys.PK_COMPILATIONS, new TableField[] { Compilations.COMPILATIONS.ID }, true);
     public static final ForeignKey<CompilationEventsRecord, EventsRecord> COMPILATION_EVENTS__FK_COMPILATION_EVENTS_EVENT = Internal.createForeignKey(CompilationEvents.COMPILATION_EVENTS, DSL.name("fk_compilation_events_event"), new TableField[] { CompilationEvents.COMPILATION_EVENTS.EVENT_ID }, Keys.PK_EVENTS, new TableField[] { Events.EVENTS.ID }, true);
     public static final ForeignKey<EventsRecord, CategoriesRecord> EVENTS__FK_EVENTS_CATEGORY = Internal.createForeignKey(Events.EVENTS, DSL.name("fk_events_category"), new TableField[] { Events.EVENTS.CATEGORY_ID }, Keys.PK_CATEGORIES, new TableField[] { Categories.CATEGORIES.ID }, true);
